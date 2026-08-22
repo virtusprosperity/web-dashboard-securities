@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Virtus Prosperity · Phân tích ngành chứng khoán</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+  :root{
+    --bg:#F4F0E9; --panel:#FFFFFF; --panel2:#FCFAF5; --ink:#211C16; --muted:#8C8276;
+    --line:#E8E2D6; --line-strong:#D8CFBE; --radius:8px;
+    --gold:#9B7B47; --gold-soft:#B89A66; --gold-deep:#7C6035; --accent:#9B7B47;
+    --good:#4F6F52; --bad:#8C3B3B; --warn:#B98A2E;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+    --serif:'EB Garamond',Georgia,serif;
+    --display:'Cinzel',Georgia,serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  button{font-family:var(--sans);cursor:pointer;}
+
+  /* header / brand */
+  header{padding:0;background:var(--panel);border-bottom:1px solid var(--line);position:relative;}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-soft) 40%,transparent 82%);}
+  .headrow{display:flex;align-items:center;gap:20px;padding:16px 26px;flex-wrap:wrap;}
+  .logo{height:80px;width:auto;flex:0 0 auto;display:block;}
+  .divider{width:1px;align-self:stretch;background:var(--line);margin:2px 0;}
+  .titleblock{flex:1 1 340px;min-width:260px;}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:0 0 6px;}
+  header h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:.005em;color:var(--ink);line-height:1.12;}
+  .cover{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:7px;letter-spacing:.02em;}
+  .hbtn{font-family:var(--mono);font-size:12px;border:1px solid var(--line-strong);background:#fff;color:var(--ink);padding:9px 14px;border-radius:7px;letter-spacing:.02em;transition:.15s;flex:0 0 auto;}
+  .hbtn:hover{border-color:var(--gold);color:var(--gold-deep);}
+
+  .wrap{padding:18px 26px 48px;max-width:1320px;margin:0 auto;}
+
+  /* control bar */
+  .bar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;box-shadow:0 1px 2px rgba(33,28,22,.03);}
+  .row{display:flex;flex-wrap:wrap;gap:15px 20px;align-items:flex-end;}
+  .ctrl{display:flex;flex-direction:column;gap:7px;}
+  .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+
+  /* segmented */
+  .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden;background:#fff;flex-wrap:wrap;}
+  .seg button{border:0;background:#fff;padding:8px 13px;font-size:13px;color:var(--muted);border-right:1px solid var(--line);transition:.12s;}
+  .seg button:last-child{border-right:0;}
+  .seg button:hover{color:var(--ink);background:var(--panel2);}
+  .seg button.on{background:var(--ink);color:#F4F0E9;font-weight:500;}
+  .seg button.on:hover{background:var(--ink);}
+
+  /* chips (company / metric selectors) */
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
+  .chip{border:1px solid var(--line-strong);background:var(--panel2);color:var(--ink);border-radius:20px;padding:6px 13px;font-size:12px;font-family:var(--mono);letter-spacing:.01em;transition:.12s;}
+  .chip:hover{border-color:var(--gold);}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#F4F0E9;font-weight:500;}
+
+  /* section group header (overview) */
+  .sec-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);margin:28px 2px 12px;padding-top:16px;border-top:1px solid var(--line);}
+  .sec-h:first-child{margin-top:0;padding-top:0;border-top:0;}
+
+  /* chart card (revenue / proprietary / ranking) */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 10px;box-shadow:0 1px 2px rgba(33,28,22,.03);position:relative;margin-bottom:16px;}
+  .card::before{content:"";position:absolute;top:0;left:0;width:46px;height:2px;background:var(--gold);border-radius:0 0 2px 0;}
+  .card .ctit{font-family:var(--serif);font-size:21px;font-weight:600;margin:0;letter-spacing:.005em;}
+  .card .csub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:.02em;}
+  .cchart{width:100%;height:400px;margin-top:8px;}
+  .cchart.tall{height:460px;}
+  .cchart.small{height:330px;}
+  .card .foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:10px;padding-top:11px;line-height:1.55;font-family:var(--mono);}
+
+  .cols2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  @media(max-width:900px){.cols2{grid-template-columns:1fr;}}
+
+  /* overview KPI cards */
+  .ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+  .ovcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 15px 10px;box-shadow:0 1px 2px rgba(33,28,22,.03);position:relative;}
+  .ovcard::before{content:"";position:absolute;top:0;left:0;width:34px;height:2px;background:var(--gold);border-radius:0 0 2px 0;}
+  .ovcard .period{font-family:var(--mono);font-size:10px;color:var(--muted);position:absolute;top:14px;right:15px;}
+  .ovcard .label{font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.01em;min-height:32px;padding-right:44px;}
+  .ovcard .value-row{display:flex;align-items:baseline;gap:8px;margin:5px 0 2px;}
+  .ovcard .value{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--ink);}
+  .ovcard .unit{font-size:11px;color:var(--muted);font-family:var(--mono);}
+  .ovcard .delta{font-family:var(--mono);font-size:11.5px;font-weight:500;}
+  .delta.up{color:var(--good);} .delta.down{color:var(--bad);} .delta.flat{color:var(--muted);}
+  .ovcard .ovspark{height:54px;margin-top:6px;}
+
+  /* margin/equity threshold card */
+  .ovcard.threshold .bar-outer{height:9px;background:var(--bg);border-radius:6px;overflow:hidden;margin:10px 0 7px;border:1px solid var(--line);}
+  .ovcard.threshold .bar-inner{height:100%;border-radius:6px;transition:width .3s ease;}
+  .ovcard.threshold .cap-note{font-size:11px;color:var(--muted);font-family:var(--mono);}
+  .ovcard.threshold .headroom{font-weight:600;color:var(--ink);}
+
+  .badge{display:inline-block;font-size:9.5px;font-family:var(--mono);padding:2px 7px;border-radius:20px;background:var(--panel2);border:1px solid var(--line-strong);color:var(--muted);margin-left:6px;letter-spacing:.02em;}
+  .badge.warn{background:#FBF0DD;border-color:var(--warn);color:var(--warn);}
+
+  /* tab panels */
+  .tabpanel{display:none;}
+  .tabpanel.on{display:block;}
+
+  .hide{display:none!important;}
+  .note{font-size:12px;color:var(--muted);font-family:var(--mono);margin:10px 2px 0;line-height:1.6;}
+  .pagefoot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);text-align:center;font-family:var(--mono);}
+
+  @media(max-width:640px){ .wrap{padding:14px;} header h1{font-size:21px;} .headrow{padding:14px 16px;gap:14px;} .logo{height:60px;} .divider{display:none;} .cchart{height:300px;} .cchart.tall{height:340px;} }
+  .loading{padding:64px 20px;text-align:center;color:var(--muted);font-family:var(--mono);line-height:1.7;}
+</style>
+</head>
+<body>
+<header>
+  <div class="headrow">
+    <img class="logo" alt="Virtus Prosperity" src="data:image/png;base64,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">
+    <div class="divider"></div>
+    <div class="titleblock">
+      <p class="eyebrow">Research &amp; Insight · FiinPro</p>
+      <h1>Phân tích ngành Chứng khoán Việt Nam</h1>
+      <div class="cover" id="cover">Đang tải dữ liệu…</div>
+    </div>
+    <button class="hbtn" id="exportBtn">↓ Xuất ảnh PNG</button>
+  </div>
+</header>
+
+<div id="boot" class="loading">Đang tải <b>ctck_data.json</b>…<br><span style="font-size:11px">Nếu mở trực tiếp bằng file:// trình duyệt sẽ chặn — hãy chạy qua GitHub Pages hoặc một local server.</span></div>
+
+<div class="wrap hide" id="app">
+
+  <div class="bar">
+    <div class="row">
+      <div class="ctrl">
+        <span class="lbl">Chế độ</span>
+        <div class="seg" id="modeSeg">
+          <button data-mode="overview" class="on">Tổng quan</button>
+          <button data-mode="revenue">Cơ cấu doanh thu</button>
+          <button data-mode="proprietary">Danh mục tự doanh</button>
+          <button data-mode="ranking">Xếp hạng</button>
+        </div>
+      </div>
+    </div>
+    <div class="lbl" style="margin-top:14px;margin-bottom:-6px">Công ty chứng khoán</div>
+    <div class="chips" id="companyChips"></div>
+  </div>
+
+  <div class="tabpanel on" id="panel-overview">
+    <div class="sec-h">An toàn tài chính &amp; đòn bẩy</div>
+    <div class="ovgrid" id="grid-safety"></div>
+    <div class="sec-h">Hiệu quả sinh lời &amp; định giá</div>
+    <div class="ovgrid" id="grid-profit"></div>
+    <div class="sec-h">Quy mô &amp; tăng trưởng</div>
+    <div class="ovgrid" id="grid-scale"></div>
+  </div>
+
+  <div class="tabpanel" id="panel-revenue">
+    <div class="card">
+      <h2 class="ctit" id="revTitle">—</h2>
+      <div class="csub">Cơ cấu doanh thu hoạt động theo mảng nghiệp vụ qua các quý (tỷ VND)</div>
+      <div class="cchart tall" id="revChart"></div>
+    </div>
+    <div class="card">
+      <h2 class="ctit">Lãi/(lỗ) từ hoạt động đầu tư theo loại tài sản tài chính</h2>
+      <div class="csub">FVTPL &middot; AFS (sẵn sàng để bán) &middot; HTM (giữ đến đáo hạn) &middot; Cho vay &amp; phải thu (margin)</div>
+      <div class="cchart small" id="incomeChart"></div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="panel-proprietary">
+    <div class="cols2">
+      <div class="card">
+        <h2 class="ctit" id="tdTitle">—</h2>
+        <div class="csub">FVTPL &amp; AFS theo giá trị hợp lý, HTM theo giá trị ghi sổ (tỷ VND) &mdash; theo quý</div>
+        <div class="cchart tall" id="tdStackChart"></div>
+      </div>
+      <div class="card">
+        <h2 class="ctit">Cơ cấu quý gần nhất</h2>
+        <div class="csub" id="tdPieDesc"></div>
+        <div class="cchart tall" id="tdPieChart"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="ctit">Sổ sách vs. Giá trị hợp lý &mdash; lãi/(lỗ) chưa thực hiện</h2>
+      <div class="csub">So sánh giá gốc và giá trị hợp lý danh mục FVTPL + AFS theo quý</div>
+      <div class="cchart small" id="tdUnrealChart"></div>
+      <div class="foot">Không gồm HTM: theo VAS, HTM hạch toán theo giá gốc và ít khi công bố giá trị hợp lý, nên đưa vào so sánh sẽ tạo ra chênh lệch không có thật.</div>
+    </div>
+    <p class="note">Lưu ý: FiinPro chỉ công bố danh mục tự doanh theo nhóm tài sản (cổ phiếu niêm yết/chưa niêm yết, chứng chỉ quỹ, trái phiếu), không nêu đích danh từng mã cổ phiếu nắm giữ. Chi tiết theo từng mã sẽ được bổ sung từ thuyết minh BCTC dạng PDF khi có.</p>
+  </div>
+
+  <div class="tabpanel" id="panel-ranking">
+    <div class="bar" style="margin-bottom:16px">
+      <div class="lbl" style="margin-bottom:8px">Chỉ tiêu xếp hạng</div>
+      <div class="chips" id="rankMetricChips" style="margin-top:0"></div>
+    </div>
+    <div class="card">
+      <h2 class="ctit" id="rankTitle">—</h2>
+      <div class="csub" id="rankDesc"></div>
+      <div class="cchart tall" id="rankChart"></div>
+    </div>
+  </div>
+
+  <div class="pagefoot">Dữ liệu: FiinProX &middot; Đơn vị tiền tệ: tỷ VND trừ khi có chú thích khác &middot; Dashboard đang trong quá trình bổ sung dữ liệu</div>
+</div>
+
+<script>function initApp(){
+"use strict";
+
+const COMPANIES = DATA.meta.companies;
+const RATIO_COS = new Set(DATA.meta.ratio_companies);
+const PERIODS = DATA.periods; // chronological ascending
+
+let state = { company: COMPANIES.includes("VND") ? "VND" : COMPANIES[0], mode: "overview", rankMetric: "roe" };
+
+// ---------- chart colors (fixed palette, matches bank dashboard tokens) ----------
+const CC = {
+  axis:"#8C8276", grid:"#E8E2D6", spark:"#9B7B47", text:"#211C16", panel:"#FFFFFF",
+  good:"#4F6F52", bad:"#8C3B3B", warn:"#B98A2E"
+};
+// same qualitative series palette as the bank dashboard, gold-led
+const PALETTE = ['#9B7B47','#3C5A6E','#8C3B3B','#4F6F52','#B08A4F','#5A4A6A','#2F6F73','#8A5A3C',
+  '#41607F','#7C4B5C','#3F5E4B','#6B4F3A','#94703F','#4A5468','#7A3F4A','#566B3C'];
+
+// ---------- formatting helpers ----------
+function fmtNum(v, decimals){
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return Number(v).toLocaleString("en-US",{minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+function fmtBn(v){ return fmtNum(v, 0); } // tỷ VND, no decimals
+function fmtPct(v, decimals){ if (v===null||v===undefined||isNaN(v)) return "—"; return fmtNum(v*100, decimals===undefined?1:decimals)+"%"; }
+function fmtX(v, decimals){ if (v===null||v===undefined||isNaN(v)) return "—"; return fmtNum(v, decimals===undefined?2:decimals)+"x"; }
+function fmtVnd(v){ if (v===null||v===undefined||isNaN(v)) return "—"; return fmtNum(v,0)+" đ"; }
+
+// ---------- data access ----------
+function seriesFor(ticker, metric){
+  const d = (DATA.data[ticker] && DATA.data[ticker][metric]) || {};
+  return PERIODS.filter(p => d[p] !== undefined && d[p] !== null).map(p => ({period:p, value:+d[p]}));
+}
+function latestPair(ticker, metric){
+  const s = seriesFor(ticker, metric);
+  if (!s.length) return {latest:null, prev:null, period:null};
+  const latest = s[s.length-1];
+  const prev = s.length>1 ? s[s.length-2] : null;
+  return {latest: latest.value, prev: prev?prev.value:null, period: latest.period};
+}
+function computedMarginPct(ticker){
+  const loan = latestPair(ticker,"margin_loan_book");
+  const eq = latestPair(ticker,"total_equity");
+  if (loan.latest===null || eq.latest===null || eq.latest===0) return {value:null, period:null};
+  return {value: loan.latest/eq.latest, period: loan.period};
+}
+
+// ---------- metric registry ----------
+const METRICS = {
+  total_assets:      {label:"Tổng tài sản", unit:"tỷ VND", fmt:fmtBn, higherBetter:null},
+  total_equity:      {label:"Vốn chủ sở hữu", unit:"tỷ VND", fmt:fmtBn, higherBetter:null},
+  margin_loan_book:  {label:"Dư nợ cho vay margin", unit:"tỷ VND", fmt:fmtBn, higherBetter:null},
+  debt_total_equity: {label:"Nợ vay / VCSH", unit:"lần", fmt:fmtX, higherBetter:false},
+  liab_equity:       {label:"Nợ phải trả / VCSH", unit:"lần", fmt:fmtX, higherBetter:false},
+  current_ratio:     {label:"Hệ số thanh toán hiện thời", unit:"lần", fmt:fmtX, higherBetter:true},
+  roe:               {label:"ROE", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
+  roa:               {label:"ROA", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
+  net_margin:        {label:"Biên lợi nhuận thuần", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
+  pb:                {label:"P/B", unit:"lần", fmt:fmtX, higherBetter:null},
+  pe_basic:          {label:"P/E", unit:"lần", fmt:fmtX, higherBetter:null},
+  eps_basic:         {label:"EPS", unit:"đ/CP", fmt:fmtVnd, higherBetter:true},
+  revenue_net:       {label:"Doanh thu thuần (quý)", unit:"tỷ VND", fmt:fmtBn, higherBetter:true},
+  net_profit:        {label:"Lợi nhuận sau thuế (quý)", unit:"tỷ VND", fmt:fmtBn, higherBetter:true},
+  growth_revenue_yoy:{label:"Tăng trưởng doanh thu YoY", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
+  growth_equity_yoy: {label:"Tăng trưởng VCSH YoY", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
+};
+
+const SAFETY_IDS  = ["total_assets","total_equity","margin_loan_book","__margin_threshold__","debt_total_equity","current_ratio"];
+const PROFIT_IDS  = ["roe","roa","net_margin","pb","pe_basic","eps_basic"];
+const SCALE_IDS   = ["revenue_net","net_profit","growth_revenue_yoy","growth_equity_yoy"];
+
+const RANK_METRIC_OPTIONS = [
+  ["total_assets","Tổng tài sản"], ["total_equity","Vốn chủ sở hữu"], ["margin_loan_book","Dư nợ margin"],
+  ["__margin_pct__","Margin / VCSH (%)"], ["roe","ROE"], ["roa","ROA"], ["net_margin","Biên LN thuần"],
+  ["pb","P/B"], ["pe_basic","P/E"], ["revenue_net","Doanh thu thuần (quý)"], ["net_profit","LNST (quý)"],
+  ["growth_revenue_yoy","Tăng trưởng DT YoY"],
+];
+
+// ---------- chart helpers ----------
+const charts = {}; // id -> echarts instance
+function getChart(elId){
+  if (charts[elId]) return charts[elId];
+  const el = document.getElementById(elId);
+  const c = echarts.init(el, null, {renderer:"svg"});
+  charts[elId] = c;
+  return c;
+}
+function disposeMiniCharts(prefix){
+  Object.keys(charts).forEach(k=>{
+    if (k.startsWith(prefix)){ charts[k].dispose(); delete charts[k]; }
+  });
+}
+const AXIS_TEXT = {color:CC.axis, fontFamily:"IBM Plex Mono", fontSize:10};
+const GRID_LINE = {lineStyle:{color:CC.grid}};
+const LEGEND_TEXT = {fontSize:11, fontFamily:"IBM Plex Sans", color:CC.text};
+
+function sparkOption(periods, values, color){
+  const c = color||CC.spark;
+  return {
+    animation:false,
+    grid:{left:0,right:0,top:4,bottom:0},
+    xAxis:{type:"category", show:false, data:periods},
+    yAxis:{type:"value", show:false, scale:true},
+    series:[{type:"line", data:values, showSymbol:false, lineStyle:{color:c, width:1.6},
+      areaStyle:{color:{type:"linear", x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:c+"33"},{offset:1,color:c+"00"}]}}}],
+    tooltip:{trigger:"axis", formatter:function(p){return p[0].axisValue+": "+fmtNum(p[0].data,1);},
+      textStyle:{fontSize:11}, extraCssText:"box-shadow:0 2px 8px rgba(0,0,0,.1);"}
+  };
+}
+
+// ---------- overview KPI card rendering ----------
+function windowSeries(ticker, metric, n){
+  const s = seriesFor(ticker, metric);
+  return s.slice(Math.max(0, s.length-n));
+}
+
+function deltaBadge(latest, prev, higherBetter){
+  if (latest===null || prev===null || prev===0) return {cls:"flat", text:"—"};
+  const d = (latest-prev)/Math.abs(prev)*100;
+  const cls = Math.abs(d)<0.5 ? "flat" : (higherBetter===false ? (d>0?"down":"up") : (d>0?"up":"down"));
+  const arrow = d>0?"▲":(d<0?"▼":"·");
+  return {cls, text: arrow+" "+fmtNum(Math.abs(d),1)+"% qoq"};
+}
+
+function makeCard(container, metricId, ticker){
+  const card = document.createElement("div");
+  card.className = "ovcard";
+
+  if (metricId === "__margin_threshold__"){
+    const m = computedMarginPct(ticker);
+    const pct = m.value===null ? null : m.value*100;
+    const cap = 200;
+    const used = pct===null ? 0 : Math.min(100, pct/cap*100);
+    let barColor = CC.good;
+    if (pct!==null){ if (pct>=180) barColor=CC.bad; else if (pct>=140) barColor=CC.warn; }
+    card.classList.add("threshold");
+    card.innerHTML = `
+      <div class="period">${m.period||""}</div>
+      <div class="label">Margin cho vay / Vốn chủ sở hữu <span class="badge${pct!==null&&pct>=180?" warn":""}">trần 200%</span></div>
+      <div class="value-row"><span class="value">${pct===null?"—":fmtNum(pct,1)}</span><span class="unit">%</span></div>
+      <div class="bar-outer"><div class="bar-inner" style="width:${used}%; background:${barColor}"></div></div>
+      <div class="cap-note">${pct===null?"Chưa có dữ liệu":"Dư địa còn lại: <span class=\"headroom\">"+fmtNum(Math.max(0,cap-pct),1)+"%</span> so với trần"}</div>
+    `;
+    container.appendChild(card);
+    return;
+  }
+
+  const meta = METRICS[metricId];
+  const {latest, prev, period} = latestPair(ticker, metricId);
+  const delta = deltaBadge(latest, prev, meta.higherBetter);
+  const chartId = "spark_"+metricId+"_"+ticker;
+  card.innerHTML = `
+    <div class="period">${period||""}</div>
+    <div class="label">${meta.label}</div>
+    <div class="value-row"><span class="value">${meta.fmt(latest)}</span><span class="unit">${latest!==null?meta.unit:""}</span></div>
+    <div class="delta ${delta.cls}">${delta.text}</div>
+    <div class="ovspark" id="${chartId}"></div>
+  `;
+  container.appendChild(card);
+  const w = windowSeries(ticker, metricId, 16);
+  if (w.length>1){
+    requestAnimationFrame(()=>{
+      const c = getChart(chartId);
+      c.setOption(sparkOption(w.map(x=>x.period), w.map(x=>x.value)));
+    });
+  }
+}
+
+function renderOverview(){
+  disposeMiniCharts("spark_");
+  const gS = document.getElementById("grid-safety"); gS.innerHTML="";
+  const gP = document.getElementById("grid-profit"); gP.innerHTML="";
+  const gK = document.getElementById("grid-scale"); gK.innerHTML="";
+  SAFETY_IDS.forEach(id=>makeCard(gS, id, state.company));
+  PROFIT_IDS.forEach(id=>makeCard(gP, id, state.company));
+  SCALE_IDS.forEach(id=>makeCard(gK, id, state.company));
+}
+
+// ---------- revenue tab ----------
+const REV_SEGMENTS = [
+  ["revenue_brokerage","Môi giới"], ["revenue_advisory","Tư vấn đầu tư"],
+  ["revenue_underwriting","Bảo lãnh phát hành"], ["revenue_agency_issuance","Đại lý phát hành"],
+  ["revenue_custody","Lưu ký"], ["revenue_financial_advisory","Tư vấn tài chính"],
+  ["revenue_other","Khác"],
+];
+const INCOME_TYPES = [
+  ["income_fvtpl","Lãi FVTPL"], ["income_afs","Lãi AFS"], ["income_htm","Lãi HTM"], ["income_lending","Lãi cho vay & phải thu (margin)"],
+];
+
+function renderRevenue(){
+  document.getElementById("revTitle").textContent = "Cơ cấu doanh thu — "+state.company;
+  const n = 16;
+  const periods = PERIODS.slice(-n);
+  const c1 = getChart("revChart");
+  const series1 = REV_SEGMENTS.map(([id,label],i)=>{
+    const d = (DATA.data[state.company][id])||{};
+    return {name:label, type:"bar", stack:"rev", data:periods.map(p=>d[p]!==undefined?+d[p]:0),
+      itemStyle:{color:PALETTE[i%PALETTE.length]}};
+  });
+  c1.setOption({
+    animation:false,
+    tooltip:{trigger:"axis", axisPointer:{type:"shadow"}},
+    legend:{bottom:0, textStyle:LEGEND_TEXT},
+    grid:{left:50, right:16, top:20, bottom:60},
+    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
+    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
+    series:series1
+  }, true);
+
+  const c2 = getChart("incomeChart");
+  const series2 = INCOME_TYPES.map(([id,label],i)=>{
+    const d = (DATA.data[state.company][id])||{};
+    return {name:label, type:"line", data:periods.map(p=>d[p]!==undefined?+d[p]:null),
+      itemStyle:{color:PALETTE[i%PALETTE.length]}, smooth:false, connectNulls:true};
+  });
+  c2.setOption({
+    animation:false,
+    tooltip:{trigger:"axis"},
+    legend:{bottom:0, textStyle:LEGEND_TEXT},
+    grid:{left:50, right:16, top:20, bottom:50},
+    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
+    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
+    series:series2
+  }, true);
+}
+
+// ---------- proprietary book (tự doanh) tab ----------
+// FVTPL & AFS are mark-to-market by definition -> use fair value.
+// HTM is held at amortized cost under VAS and fair value is rarely disclosed,
+// so we use its book/cost value (its actual carrying amount) instead of fair value.
+const TD_CLASSES = [["fvtpl_fv_total","FVTPL"], ["afs_fv_total","AFS (sẵn sàng để bán)"], ["htm_cost_total","HTM (giữ đến đáo hạn, giá trị ghi sổ)"]];
+const TD_ASSET_TYPES = [
+  {key:"listed", label:"Cổ phiếu niêm yết", parts:["fvtpl_fv_listed","afs_fv_listed","htm_cost_listed"]},
+  {key:"unlisted", label:"Cổ phiếu chưa niêm yết / Khác", parts:["fvtpl_fv_unlisted","afs_fv_unlisted","htm_cost_unlisted"]},
+  {key:"fundcert", label:"Chứng chỉ quỹ", parts:["fvtpl_fv_fundcert","afs_fv_fundcert","htm_cost_fundcert"]},
+  {key:"bond", label:"Trái phiếu", parts:["fvtpl_fv_bond","afs_fv_bond","htm_cost_bond"]},
+];
+
+function sumParts(ticker, parts, period){
+  let sum = 0, any=false;
+  parts.forEach(p=>{
+    const d = DATA.data[ticker][p];
+    if (d && d[period]!==undefined){ sum += +d[period]; any=true; }
+  });
+  return any ? sum : null;
+}
+
+function renderProprietary(){
+  const ticker = state.company;
+  document.getElementById("tdTitle").textContent = "Danh mục tự doanh — "+ticker;
+  const n = 16;
+  const periods = PERIODS.slice(-n);
+
+  const c1 = getChart("tdStackChart");
+  const series1 = TD_CLASSES.map(([id,label],i)=>{
+    const d = DATA.data[ticker][id]||{};
+    return {name:label, type:"bar", stack:"td", data:periods.map(p=>d[p]!==undefined?+d[p]:0),
+      itemStyle:{color:PALETTE[i%PALETTE.length]}};
+  });
+  c1.setOption({
+    animation:false,
+    tooltip:{trigger:"axis", axisPointer:{type:"shadow"}},
+    legend:{bottom:0, textStyle:LEGEND_TEXT},
+    grid:{left:55, right:16, top:20, bottom:50},
+    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
+    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
+    series:series1
+  }, true);
+
+  // latest period with any td data
+  let latestP = null;
+  for (let i=PERIODS.length-1;i>=0;i--){
+    const p = PERIODS[i];
+    const has = TD_CLASSES.some(([id])=> (DATA.data[ticker][id]||{})[p]!==undefined);
+    if (has){ latestP = p; break; }
+  }
+  document.getElementById("tdPieDesc").textContent = latestP ? ("Quý "+latestP+" — phân bổ theo loại tài sản (tất cả các nhóm FVTPL/AFS/HTM)") : "Chưa có dữ liệu";
+  const pieData = TD_ASSET_TYPES.map((t,i)=>({name:t.label, value: latestP ? (sumParts(ticker,t.parts,latestP)||0) : 0})).filter(x=>x.value>0);
+  const c2 = getChart("tdPieChart");
+  c2.setOption({
+    animation:false,
+    tooltip:{trigger:"item", formatter:p=>p.name+": "+fmtNum(p.value,0)+" tỷ ("+p.percent+"%)"},
+    legend:{bottom:0, textStyle:LEGEND_TEXT},
+    series:[{type:"pie", radius:["35%","68%"], center:["50%","44%"], data:pieData,
+      itemStyle:{borderColor:CC.panel, borderWidth:2},
+      label:{fontSize:11, fontFamily:"IBM Plex Sans", color:CC.text},
+      color:PALETTE}]
+  }, true);
+
+  // unrealized gain/loss — FVTPL + AFS only. HTM is excluded: under VAS it is held
+  // at amortized cost and its fair value is rarely disclosed, so cost≈carrying value
+  // and comparing it to a mostly-blank fair value column would fabricate a fake loss.
+  const c3 = getChart("tdUnrealChart");
+  const costIds = ["fvtpl_cost_total","afs_cost_total"];
+  const fvIds = ["fvtpl_fv_total","afs_fv_total"];
+  const costSeries = periods.map(p=>{ let s=0,any=false; costIds.forEach(id=>{const d=DATA.data[ticker][id]; if(d&&d[p]!==undefined){s+=+d[p];any=true;}}); return any?s:null; });
+  const fvSeries = periods.map(p=>{ let s=0,any=false; fvIds.forEach(id=>{const d=DATA.data[ticker][id]; if(d&&d[p]!==undefined){s+=+d[p];any=true;}}); return any?s:null; });
+  const unrealSeries = periods.map((p,i)=> (costSeries[i]!==null && fvSeries[i]!==null) ? (fvSeries[i]-costSeries[i]) : null);
+  c3.setOption({
+    animation:false,
+    tooltip:{trigger:"axis"},
+    legend:{bottom:0, textStyle:LEGEND_TEXT},
+    grid:{left:55, right:16, top:20, bottom:50},
+    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
+    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
+    series:[
+      {name:"Giá gốc", type:"line", data:costSeries, itemStyle:{color:"#8C8276"}, connectNulls:true},
+      {name:"Giá trị hợp lý", type:"line", data:fvSeries, itemStyle:{color:CC.spark}, connectNulls:true},
+      {name:"Lãi/(lỗ) chưa thực hiện", type:"bar", data:unrealSeries,
+        itemStyle:{color:function(p){return p.data>=0 ? CC.good : CC.bad;}}},
+    ]
+  }, true);
+}
+
+// ---------- ranking tab ----------
+function renderRankMetricChips(){
+  const el = document.getElementById("rankMetricChips");
+  el.innerHTML = "";
+  RANK_METRIC_OPTIONS.forEach(([id,label])=>{
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip"+(state.rankMetric===id?" on":"");
+    chip.textContent = label;
+    chip.onclick = ()=>{ state.rankMetric = id; renderRankMetricChips(); renderRanking(); };
+    el.appendChild(chip);
+  });
+}
+
+function getRankValue(ticker, metricId){
+  if (metricId === "__margin_pct__"){
+    const m = computedMarginPct(ticker);
+    return m.value===null?null:m.value*100;
+  }
+  const {latest} = latestPair(ticker, metricId);
+  const isPctMetric = METRICS[metricId] && METRICS[metricId].unit==="%";
+  return latest===null ? null : (isPctMetric ? latest*100 : latest);
+}
+
+function renderRanking(){
+  const metricId = state.rankMetric;
+  const label = RANK_METRIC_OPTIONS.find(x=>x[0]===metricId)[1];
+  document.getElementById("rankTitle").textContent = "Xếp hạng theo "+label;
+  const isRatioOnly = ["roe","roa","net_margin","pb","pe_basic","growth_revenue_yoy"].includes(metricId);
+  document.getElementById("rankDesc").textContent = "Giá trị quý gần nhất có dữ liệu của từng công ty."+
+    (isRatioOnly ? " Chỉ áp dụng cho các công ty đã có file chỉ số tài chính FiinPro." : "");
+
+  let rows = COMPANIES.map(t=>({ticker:t, value:getRankValue(t, metricId)})).filter(r=>r.value!==null);
+  rows.sort((a,b)=>b.value-a.value);
+
+  const isPct = metricId==="__margin_pct__" || (METRICS[metricId]&&METRICS[metricId].unit==="%");
+  const colorFn = (metricId==="__margin_pct__") ? (v)=> v>=180?CC.bad: v>=140?CC.warn:CC.good : ()=>CC.spark;
+
+  const c = getChart("rankChart");
+  c.setOption({
+    animation:false,
+    tooltip:{trigger:"axis", axisPointer:{type:"shadow"}, formatter:p=>{
+      const d=p[0]; return d.axisValue+": "+fmtNum(d.data,isPct?1:0)+(isPct?"%":"");
+    }},
+    grid:{left:60, right:24, top:16, bottom:30},
+    xAxis:{type:"category", data:rows.map(r=>r.ticker), axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
+    yAxis:{type:"value", axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
+    series:[{type:"bar", data:rows.map(r=>({value:r.value, itemStyle:{color:colorFn(r.value)}})), barMaxWidth:34,
+      label:{show:true, position:"top", formatter:p=>fmtNum(p.data.value||p.data,isPct?1:0), fontSize:10, fontFamily:"IBM Plex Mono", color:CC.axis}}]
+  }, true);
+}
+
+// ---------- nav / chips ----------
+function renderCompanyChips(){
+  const el = document.getElementById("companyChips");
+  el.innerHTML = "";
+  COMPANIES.forEach(t=>{
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip"+(state.company===t?" on":"");
+    chip.textContent = t + (RATIO_COS.has(t) ? "" : " ·");
+    chip.title = RATIO_COS.has(t) ? "" : "Chưa có file chỉ số tài chính/định giá";
+    chip.onclick = ()=>{ state.company = t; renderCompanyChips(); renderCurrentPanel(); };
+    el.appendChild(chip);
+  });
+}
+
+function renderCurrentPanel(){
+  if (state.mode==="overview") renderOverview();
+  else if (state.mode==="revenue") renderRevenue();
+  else if (state.mode==="proprietary") renderProprietary();
+  else if (state.mode==="ranking") renderRanking();
+}
+
+function setupModeSeg(){
+  const btns = document.querySelectorAll("#modeSeg button");
+  btns.forEach(b=>{
+    b.onclick = ()=>{
+      btns.forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      state.mode = b.dataset.mode;
+      document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("on"));
+      document.getElementById("panel-"+state.mode).classList.add("on");
+      updateExportBtnVisibility();
+      renderCurrentPanel();
+      window.dispatchEvent(new Event("resize"));
+    };
+  });
+}
+
+// ---------- export current chart as PNG ----------
+function currentExportChartId(){
+  if (state.mode==="revenue") return "revChart";
+  if (state.mode==="proprietary") return "tdStackChart";
+  if (state.mode==="ranking") return "rankChart";
+  return null;
+}
+function updateExportBtnVisibility(){
+  document.getElementById("exportBtn").classList.toggle("hide", state.mode==="overview");
+}
+document.getElementById("exportBtn").onclick = ()=>{
+  const id = currentExportChartId();
+  if (!id || !charts[id]) return;
+  const url = charts[id].getDataURL({pixelRatio:2, backgroundColor:"#fff"});
+  const a = document.createElement("a");
+  a.href = url; a.download = "ctck-"+state.company+"-"+state.mode+".png"; a.click();
+};
+
+// ---------- init ----------
+document.getElementById("cover").textContent =
+  COMPANIES.length + " công ty chứng khoán · " + RATIO_COS.size + " có đầy đủ chỉ số định giá · quý " + PERIODS[0] + " – " + PERIODS[PERIODS.length-1];
+
+renderCompanyChips();
+setupModeSeg();
+renderRankMetricChips();
+renderOverview();
+updateExportBtnVisibility();
+
+window.addEventListener("resize", ()=>{
+  Object.values(charts).forEach(c=>{ try{c.resize();}catch(e){} });
+});
+
+}
+</script>
+<script>
+fetch('ctck_data.json')
+  .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(json=>{
+    window.DATA = json;
+    document.getElementById('boot').classList.add('hide');
+    document.getElementById('app').classList.remove('hide');
+    initApp();
+  })
+  .catch(e=>{
+    document.getElementById('boot').innerHTML = 'Không tải được <b>ctck_data.json</b> ('+e.message+').<br>'
+      + '<span style="font-size:12px">Đảm bảo file nằm cùng thư mục với index.html và đang chạy qua web server (GitHub Pages) chứ không mở bằng file://.</span>';
+  });
+</script>
+</body>
+</html>
