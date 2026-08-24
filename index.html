@@ -562,6 +562,15 @@ function renderHoldings(ticker){
     "Chi tiết từng khoản mục "+catLabel+" theo giá trị hợp lý (tỷ VND) — quý "+detail.period;
 
   const denom = detail.denom_ty_vnd || 0;
+  // largest-remainder rounding: displayed row values (integer ty VND) always sum to the
+  // displayed total, instead of each row rounding independently (which can be off by ±1).
+  const roundedDenom = Math.round(denom);
+  const floors = detail.items.map(it=>Math.floor(it.value));
+  let remainder = roundedDenom - floors.reduce((a,b)=>a+b,0);
+  const order = detail.items.map((it,i)=>({i, frac:it.value-floors[i]})).sort((a,b)=>b.frac-a.frac);
+  const displayVal = floors.slice();
+  for (let k=0; k<order.length && remainder>0; k++, remainder--){ displayVal[order[k].i] += 1; }
+
   const rows = detail.items.map((it,i)=>{
     const pct = denom>0 ? (it.value/denom*100) : null;
     const nameHtml = it.is_ticker
@@ -569,11 +578,11 @@ function renderHoldings(ticker){
       : `<span style="font-family:var(--sans);font-weight:500;">${escHtml(it.label)}</span>`;
     return `<tr><td class="hc-r">${i+1}.</td>`
       + `<td class="hc-l hc-t">${nameHtml}<span class="badge">${escHtml(it.tag)}</span></td>`
-      + `<td class="hc-v">${fmtBn(it.value)}</td>`
+      + `<td class="hc-v">${fmtNum(displayVal[i],0)}</td>`
       + `<td class="hc-s">${pct===null?"—":fmtNum(pct,1)+"%"}</td></tr>`;
   }).join("");
   const totRow = `<tr class="holdtot"><td class="hc-r"></td><td class="hc-l">Tổng ${catLabel} (giá trị hợp lý)</td>`
-    + `<td class="hc-v">${fmtBn(denom)}</td><td class="hc-s">100%</td></tr>`;
+    + `<td class="hc-v">${fmtNum(roundedDenom,0)}</td><td class="hc-s">100%</td></tr>`;
   document.getElementById("tdHoldingsBody").innerHTML = rows + totRow;
 
   document.getElementById("tdHoldingsFoot").innerHTML =
