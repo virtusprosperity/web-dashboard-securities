@@ -199,7 +199,7 @@
       <div class="foot">Không gồm HTM: theo VAS, HTM hạch toán theo giá gốc và ít khi công bố giá trị hợp lý, nên đưa vào so sánh sẽ tạo ra chênh lệch không có thật.</div>
     </div>
     <div class="card hide" id="tdHoldingsCard">
-      <h2 class="ctit">Top cổ phiếu nắm giữ (Q2/2026)</h2>
+      <h2 class="ctit">Chi tiết danh mục tự doanh (Q2/2026)</h2>
       <div class="csub" id="tdHoldingsSub"></div>
       <div style="overflow-x:auto;margin-top:8px;">
         <table class="holdtable">
@@ -555,8 +555,11 @@ function renderHoldings(ticker){
     return;
   }
   card.classList.remove("hide");
+  const hasFVTPL = detail.items.some(it=>/FVTPL/.test(it.tag));
+  const hasAFS = detail.items.some(it=>/AFS/.test(it.tag));
+  const catLabel = hasFVTPL && hasAFS ? "FVTPL + AFS" : (hasFVTPL ? "FVTPL" : "AFS");
   document.getElementById("tdHoldingsSub").textContent =
-    "Chi tiết từng khoản mục FVTPL + AFS theo giá trị hợp lý (tỷ VND) — quý "+detail.period;
+    "Chi tiết từng khoản mục "+catLabel+" theo giá trị hợp lý (tỷ VND) — quý "+detail.period;
 
   const denom = detail.denom_ty_vnd || 0;
   const rows = detail.items.map((it,i)=>{
@@ -569,13 +572,16 @@ function renderHoldings(ticker){
       + `<td class="hc-v">${fmtBn(it.value)}</td>`
       + `<td class="hc-s">${pct===null?"—":fmtNum(pct,1)+"%"}</td></tr>`;
   }).join("");
-  const totRow = `<tr class="holdtot"><td class="hc-r"></td><td class="hc-l">Tổng FVTPL + AFS (giá trị hợp lý)</td>`
+  const totRow = `<tr class="holdtot"><td class="hc-r"></td><td class="hc-l">Tổng ${catLabel} (giá trị hợp lý)</td>`
     + `<td class="hc-v">${fmtBn(denom)}</td><td class="hc-s">100%</td></tr>`;
   document.getElementById("tdHoldingsBody").innerHTML = rows + totRow;
 
   document.getElementById("tdHoldingsFoot").innerHTML =
     "Nguồn: Thuyết minh Báo cáo tài chính (PDF) quý Q2/2026 — không phải FiinPro. Chỉ thể hiện số liệu một quý (Q2/2026), chưa có dữ liệu để so sánh qua các quý. "
-    + "\"Khác\" là phần còn lại gộp theo thuyết minh gốc, doanh nghiệp không tách rõ từng mã cho phần này. Đơn vị: tỷ VND.";
+    + "\"Khác\" là phần còn lại gộp theo thuyết minh gốc, doanh nghiệp không tách rõ từng mã hoặc từng khoản mục nhỏ hơn cho phần này. "
+    + "Công ty không công bố tên từng mã cổ phiếu cụ thể trong thuyết minh thì chỉ hiện được theo nhóm tài sản (cổ phiếu niêm yết/chưa niêm yết, trái phiếu...), không có tên mã. "
+    + (detail.note ? escHtml(detail.note)+" " : "")
+    + "Đơn vị: tỷ VND.";
 }
 
 // ---------- ranking tab ----------
