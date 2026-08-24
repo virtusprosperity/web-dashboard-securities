@@ -98,6 +98,19 @@
   .badge{display:inline-block;font-size:9.5px;font-family:var(--mono);padding:2px 7px;border-radius:20px;background:var(--panel2);border:1px solid var(--line-strong);color:var(--muted);margin-left:6px;letter-spacing:.02em;}
   .badge.warn{background:#FBF0DD;border-color:var(--warn);color:var(--warn);}
 
+  /* holdings table (danh muc tu doanh - chi tiet ma co phieu) */
+  .holdtable{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .holdtable th,.holdtable td{padding:7px 9px;border-top:1px solid var(--line);text-align:right;}
+  .holdtable tr:first-child td{border-top:0;}
+  .holdtable th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--panel2);border-top:0;border-bottom:1px solid var(--line);text-align:right;}
+  .holdtable th.hc-l,.holdtable td.hc-l{text-align:left;}
+  .holdtable td.hc-r{font-family:var(--mono);color:var(--muted);width:26px;}
+  .holdtable td.hc-t{font-family:var(--mono);font-weight:600;color:var(--ink);}
+  .holdtable td.hc-t .subname{display:block;font-family:var(--sans);font-weight:400;font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .holdtable td.hc-v{font-family:var(--mono);color:var(--ink);}
+  .holdtable td.hc-s{font-family:var(--mono);color:var(--muted);width:52px;}
+  .holdtable tr.holdtot td{background:var(--panel2);font-weight:600;font-family:var(--mono);}
+
   /* tab panels */
   .tabpanel{display:none;}
   .tabpanel.on{display:block;}
@@ -185,7 +198,18 @@
       <div class="cchart small" id="tdUnrealChart"></div>
       <div class="foot">Không gồm HTM: theo VAS, HTM hạch toán theo giá gốc và ít khi công bố giá trị hợp lý, nên đưa vào so sánh sẽ tạo ra chênh lệch không có thật.</div>
     </div>
-    <p class="note">Lưu ý: FiinPro chỉ công bố danh mục tự doanh theo nhóm tài sản (cổ phiếu niêm yết/chưa niêm yết, chứng chỉ quỹ, trái phiếu), không nêu đích danh từng mã cổ phiếu nắm giữ. Chi tiết theo từng mã sẽ được bổ sung từ thuyết minh BCTC dạng PDF khi có.</p>
+    <div class="card hide" id="tdHoldingsCard">
+      <h2 class="ctit">Top cổ phiếu nắm giữ (Q2/2026)</h2>
+      <div class="csub" id="tdHoldingsSub"></div>
+      <div style="overflow-x:auto;margin-top:8px;">
+        <table class="holdtable">
+          <thead><tr><th class="hc-l" style="width:26px"></th><th class="hc-l">Mã / khoản mục</th><th>Giá trị hợp lý</th><th>Tỷ trọng</th></tr></thead>
+          <tbody id="tdHoldingsBody"></tbody>
+        </table>
+      </div>
+      <div class="foot" id="tdHoldingsFoot"></div>
+    </div>
+    <p class="note" id="tdGeneralNote">Lưu ý: FiinPro chỉ công bố danh mục tự doanh theo nhóm tài sản (cổ phiếu niêm yết/chưa niêm yết, chứng chỉ quỹ, trái phiếu), không nêu đích danh từng mã cổ phiếu nắm giữ.</p>
   </div>
 
   <div class="tabpanel" id="panel-ranking">
@@ -515,6 +539,43 @@ function renderProprietary(){
         itemStyle:{color:function(p){return p.data>=0 ? CC.good : CC.bad;}}},
     ]
   }, true);
+
+  renderHoldings(ticker);
+}
+
+// ---------- ticker-level holdings detail (Q2/2026 only, 6 companies with thuyết minh BCTC PDF detail) ----------
+function escHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderHoldings(ticker){
+  const card = document.getElementById("tdHoldingsCard");
+  const detail = DATA.data[ticker] && DATA.data[ticker].tu_doanh_chi_tiet_q2_2026;
+  if (!detail || !detail.items || !detail.items.length){
+    card.classList.add("hide");
+    return;
+  }
+  card.classList.remove("hide");
+  document.getElementById("tdHoldingsSub").textContent =
+    "Chi tiết từng khoản mục FVTPL + AFS theo giá trị hợp lý (tỷ VND) — quý "+detail.period;
+
+  const denom = detail.denom_ty_vnd || 0;
+  const rows = detail.items.map((it,i)=>{
+    const pct = denom>0 ? (it.value/denom*100) : null;
+    const nameHtml = it.is_ticker
+      ? escHtml(it.label)
+      : `<span style="font-family:var(--sans);font-weight:500;">${escHtml(it.label)}</span>`;
+    return `<tr><td class="hc-r">${i+1}.</td>`
+      + `<td class="hc-l hc-t">${nameHtml}<span class="badge">${escHtml(it.tag)}</span></td>`
+      + `<td class="hc-v">${fmtBn(it.value)}</td>`
+      + `<td class="hc-s">${pct===null?"—":fmtNum(pct,1)+"%"}</td></tr>`;
+  }).join("");
+  const totRow = `<tr class="holdtot"><td class="hc-r"></td><td class="hc-l">Tổng FVTPL + AFS (giá trị hợp lý)</td>`
+    + `<td class="hc-v">${fmtBn(denom)}</td><td class="hc-s">100%</td></tr>`;
+  document.getElementById("tdHoldingsBody").innerHTML = rows + totRow;
+
+  document.getElementById("tdHoldingsFoot").innerHTML =
+    "Nguồn: Thuyết minh Báo cáo tài chính (PDF) quý Q2/2026 — không phải FiinPro. Chỉ thể hiện số liệu một quý (Q2/2026), chưa có dữ liệu để so sánh qua các quý. "
+    + "\"Khác\" là phần còn lại gộp theo thuyết minh gốc, doanh nghiệp không tách rõ từng mã cho phần này. Đơn vị: tỷ VND.";
 }
 
 // ---------- ranking tab ----------
