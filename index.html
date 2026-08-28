@@ -1,13 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Virtus Prosperity · Phân tích ngành chứng khoán</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <style>
   :root{
     --bg:#F4F0E9; --panel:#FFFFFF; --panel2:#FCFAF5; --ink:#211C16; --muted:#8C8276;
@@ -46,86 +46,80 @@
   .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
 
   /* segmented */
-  .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden;background:#fff;flex-wrap:wrap;}
+  .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden;background:#fff;}
   .seg button{border:0;background:#fff;padding:8px 13px;font-size:13px;color:var(--muted);border-right:1px solid var(--line);transition:.12s;}
   .seg button:last-child{border-right:0;}
   .seg button:hover{color:var(--ink);background:var(--panel2);}
   .seg button.on{background:var(--ink);color:#F4F0E9;font-weight:500;}
   .seg button.on:hover{background:var(--ink);}
+  .seg.sm button{padding:7px 11px;font-size:12px;font-family:var(--mono);}
 
-  /* chips (company / metric selectors) */
+  /* dropdown picker */
+  .pick{position:relative;}
+  .pick>.trig{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:#fff;border-radius:7px;padding:9px 13px;font-size:13px;min-width:195px;justify-content:space-between;transition:.12s;}
+  .pick>.trig:hover{border-color:var(--gold);}
+  .trig .cnt{font-family:var(--mono);font-size:11px;color:#fff;background:var(--gold);border-radius:20px;padding:1px 7px;}
+  .panel{position:absolute;z-index:40;top:calc(100% + 6px);left:0;width:370px;max-width:86vw;background:#fff;border:1px solid var(--line-strong);border-radius:9px;box-shadow:0 16px 40px rgba(33,28,22,.16);display:none;overflow:hidden;}
+  .panel.open{display:block;}
+  .panel .srch{padding:11px;border-bottom:1px solid var(--line);}
+  .panel .srch input{width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:9px 11px;font-family:var(--sans);font-size:13px;}
+  .panel .srch input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(155,123,71,.12);}
+  .panel .list{max-height:368px;overflow-y:auto;}
+  .panel .ptools{display:flex;gap:12px;padding:9px 13px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;}
+  .panel .ptools a{color:var(--gold-deep);cursor:pointer;text-decoration:none;}
+  .panel .ptools a:hover{text-decoration:underline;}
+  .sec-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);background:var(--panel2);padding:8px 13px;position:sticky;top:0;cursor:pointer;display:flex;justify-content:space-between;border-top:1px solid var(--line);}
+  .opt{display:flex;align-items:center;gap:9px;padding:6px 13px;font-size:13px;cursor:pointer;}
+  .opt:hover{background:var(--panel2);}
+  .opt input{accent-color:var(--gold);width:15px;height:15px;flex:0 0 auto;}
+  .opt .nm{line-height:1.25;}
+  .opt .dot{width:9px;height:9px;border-radius:2px;flex:0 0 auto;}
+  .opt .u{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto;flex:0 0 auto;}
+
+  /* chips */
   .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
-  .chip{border:1px solid var(--line-strong);background:var(--panel2);color:var(--ink);border-radius:20px;padding:6px 13px;font-size:12px;font-family:var(--mono);letter-spacing:.01em;transition:.12s;}
-  .chip:hover{border-color:var(--gold);}
-  .chip.on{background:var(--ink);border-color:var(--ink);color:#F4F0E9;font-weight:500;}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line-strong);border-radius:20px;padding:4px 6px 4px 11px;font-size:12px;font-family:var(--mono);}
+  .chip .dot{width:9px;height:9px;border-radius:2px;}
+  .chip .x{border:0;background:none;color:var(--muted);font-size:15px;line-height:1;padding:0 2px;cursor:pointer;}
+  .chip .x:hover{color:var(--gold-deep);}
 
-  /* section group header (overview) */
-  .sec-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);margin:28px 2px 12px;padding-top:16px;border-top:1px solid var(--line);}
-  .sec-h:first-child{margin-top:0;padding-top:0;border-top:0;}
+  /* range */
+  .rng{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .rng select{font-family:var(--mono);font-size:12px;border:1px solid var(--line-strong);border-radius:6px;padding:8px 9px;background:#fff;color:var(--ink);}
+  .rng select:focus{outline:none;border-color:var(--gold);}
 
-  /* chart card (revenue / proprietary / ranking) */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 10px;box-shadow:0 1px 2px rgba(33,28,22,.03);position:relative;margin-bottom:16px;}
+  /* chart card */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 10px;box-shadow:0 1px 2px rgba(33,28,22,.03);position:relative;}
   .card::before{content:"";position:absolute;top:0;left:0;width:46px;height:2px;background:var(--gold);border-radius:0 0 2px 0;}
-  .card .ctit{font-family:var(--serif);font-size:21px;font-weight:600;margin:0;letter-spacing:.005em;}
-  .card .csub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:.02em;}
-  .cchart{width:100%;height:400px;margin-top:8px;}
-  .cchart.tall{height:460px;}
-  .cchart.small{height:330px;}
-  .card .foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:10px;padding-top:11px;line-height:1.55;font-family:var(--mono);}
+  .ctit{font-family:var(--serif);font-size:21px;font-weight:600;margin:0;letter-spacing:.005em;}
+  .csub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:.02em;}
+  #chart{width:100%;height:486px;margin-top:8px;}
+  .foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:6px;padding-top:11px;line-height:1.55;}
 
-  .cols2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
-  @media(max-width:900px){.cols2{grid-template-columns:1fr;}}
+  .stats{display:flex;flex-wrap:wrap;gap:11px;margin-top:16px;}
+  .st{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:152px;flex:1 1 152px;box-shadow:0 1px 2px rgba(33,28,22,.03);}
+  .st .h{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .st .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:6px;color:var(--ink);}
+  .st .d{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;}
 
-  /* overview KPI cards */
-  .ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
-  .ovcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 15px 10px;box-shadow:0 1px 2px rgba(33,28,22,.03);position:relative;}
+  /* overview grid */
+  .ovmeta{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.02em;margin:2px 2px 12px;}
+  .ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px;}
+  .ovcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 15px 8px;box-shadow:0 1px 2px rgba(33,28,22,.03);position:relative;}
   .ovcard::before{content:"";position:absolute;top:0;left:0;width:34px;height:2px;background:var(--gold);border-radius:0 0 2px 0;}
-  .ovcard .period{font-family:var(--mono);font-size:10px;color:var(--muted);position:absolute;top:14px;right:15px;}
-  .ovcard .label{font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.01em;min-height:32px;padding-right:44px;}
-  .ovcard .value-row{display:flex;align-items:baseline;gap:8px;margin:5px 0 2px;}
-  .ovcard .value{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--ink);}
-  .ovcard .unit{font-size:11px;color:var(--muted);font-family:var(--mono);}
-  .ovcard .delta{font-family:var(--mono);font-size:11.5px;font-weight:500;}
-  .delta.up{color:var(--good);} .delta.down{color:var(--bad);} .delta.flat{color:var(--muted);}
-  .ovcard .ovspark{height:54px;margin-top:6px;}
+  .ovhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .ovtit{font-family:var(--serif);font-size:16.5px;font-weight:600;margin:0;letter-spacing:.005em;line-height:1.2;}
+  .ovsub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px;letter-spacing:.02em;}
+  .ovbtns{display:flex;gap:5px;flex:0 0 auto;}
+  .ovbtns button{border:1px solid var(--line-strong);background:#fff;color:var(--muted);border-radius:6px;font-size:12px;line-height:1;padding:5px 7px;font-family:var(--mono);transition:.12s;}
+  .ovbtns button:hover{border-color:var(--gold);color:var(--gold-deep);}
+  .ovchart{width:100%;height:236px;margin-top:6px;}
+  .ovfoot{font-size:11.5px;color:var(--muted);margin-top:14px;font-family:var(--mono);letter-spacing:.02em;}
+  @media(max-width:640px){ .ovgrid{grid-template-columns:1fr;} .ovchart{height:210px;} }
 
-  /* margin/equity threshold card */
-  .ovcard.threshold .bar-outer{height:9px;background:var(--bg);border-radius:6px;overflow:hidden;margin:10px 0 7px;border:1px solid var(--line);}
-  .ovcard.threshold .bar-inner{height:100%;border-radius:6px;transition:width .3s ease;}
-  .ovcard.threshold .cap-note{font-size:11px;color:var(--muted);font-family:var(--mono);}
-  .ovcard.threshold .headroom{font-weight:600;color:var(--ink);}
+  .hide{display:none!important;}
 
-  .badge{display:inline-block;font-size:9.5px;font-family:var(--mono);padding:2px 7px;border-radius:20px;background:var(--panel2);border:1px solid var(--line-strong);color:var(--muted);margin-left:6px;letter-spacing:.02em;}
-  .badge.warn{background:#FBF0DD;border-color:var(--warn);color:var(--warn);}
-
-  /* holdings table (danh muc tu doanh - chi tiet ma co phieu) */
-  .holdtable{width:100%;border-collapse:collapse;font-size:12.5px;}
-  .holdtable th,.holdtable td{padding:7px 9px;border-top:1px solid var(--line);text-align:right;}
-  .holdtable tr:first-child td{border-top:0;}
-  .holdtable th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--panel2);border-top:0;border-bottom:1px solid var(--line);text-align:right;}
-  .holdtable th.hc-l,.holdtable td.hc-l{text-align:left;}
-  .holdtable td.hc-r{font-family:var(--mono);color:var(--muted);width:26px;}
-  .holdtable td.hc-t{font-family:var(--mono);font-weight:600;color:var(--ink);}
-  .holdtable td.hc-t .subname{display:block;font-family:var(--sans);font-weight:400;font-size:10.5px;color:var(--muted);margin-top:1px;}
-  .holdtable td.hc-v{font-family:var(--mono);color:var(--ink);}
-  .holdtable td.hc-s{font-family:var(--mono);color:var(--muted);width:52px;}
-  .holdtable tr.holdtot td{background:var(--panel2);font-weight:600;font-family:var(--mono);}
-
-  /* small stat cards (định giá tab) */
-  .stats{display:flex;flex-wrap:wrap;gap:11px;margin-top:16px;}
-  .st{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:152px;flex:1 1 152px;box-shadow:0 1px 2px rgba(33,28,22,.03);}
-  .st .h{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted);}
-  .st .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:6px;color:var(--ink);}
-  .st .d{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;}
-
-  /* small stat cards (định giá tab) */
-  .stats{display:flex;flex-wrap:wrap;gap:11px;margin-top:16px;}
-  .st{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:152px;flex:1 1 152px;box-shadow:0 1px 2px rgba(33,28,22,.03);}
-  .st .h{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted);}
-  .st .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:6px;color:var(--ink);}
-  .st .d{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;}
-
-  /* seasonality-style heatmap table (mùa vụ, thị phần) */
+  /* seasonality / market-share heatmap tables */
   .seasonsec{font-family:var(--serif);font-size:15px;font-weight:600;margin:20px 0 8px;color:var(--ink);}
   .seasonsec:first-child{margin-top:0;}
   .seasonwrap-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);}
@@ -138,16 +132,37 @@
   .seasontable th.mssel{color:var(--gold-deep);background:#FBF0DD;}
   .seasontable td.mssel{box-shadow:inset 0 0 0 2px var(--gold);}
 
-  /* tab panels */
-  .tabpanel{display:none;}
-  .tabpanel.on{display:block;}
+  /* ranking mode */
+  .rkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px;margin-top:10px;padding-bottom:8px;}
+  .rkcol{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;}
+  .rkcol h4{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;background:var(--panel2);border-bottom:1px solid var(--line);padding:8px 10px;color:var(--gold-deep);text-transform:uppercase;display:flex;justify-content:space-between;}
+  .rkcol table{width:100%;border-collapse:collapse;font-size:12px;}
+  .rkcol td{padding:4px 8px;border-top:1px solid var(--line);}
+  .rkcol tr:first-child td{border-top:0;}
+  .rk-r{font-family:var(--mono);color:var(--muted);width:24px;font-size:11px;}
+  .rk-b{width:50px;}
+  .rk-b span{display:inline-block;color:#fff;font-family:var(--mono);font-size:10.5px;border-radius:4px;padding:2px 6px;font-weight:600;letter-spacing:.02em;}
+  .rk-v{font-family:var(--mono);text-align:right;}
+  .rk-s{font-family:var(--mono);text-align:right;color:var(--muted);width:52px;font-size:11px;}
+  .rk-c{width:36px;font-family:var(--mono);font-size:10.5px;text-align:right;}
+  .rk-c.up{color:var(--good);} .rk-c.dn{color:var(--bad);} .rk-c.eq{color:var(--muted);}
+  .rktot td{background:var(--panel2);font-weight:600;font-family:var(--mono);font-size:11.5px;}
 
-  .hide{display:none!important;}
-  .note{font-size:12px;color:var(--muted);font-family:var(--mono);margin:10px 2px 0;line-height:1.6;}
-  .pagefoot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);text-align:center;font-family:var(--mono);}
+  /* proprietary holdings detail table */
+  .holdtable{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .holdtable th,.holdtable td{padding:7px 9px;border-top:1px solid var(--line);text-align:right;}
+  .holdtable tr:first-child td{border-top:0;}
+  .holdtable th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--panel2);border-top:0;border-bottom:1px solid var(--line);text-align:right;}
+  .holdtable th.hc-l,.holdtable td.hc-l{text-align:left;}
+  .holdtable td.hc-r{font-family:var(--mono);color:var(--muted);width:26px;}
+  .holdtable td.hc-t{font-family:var(--mono);font-weight:600;color:var(--ink);}
+  .holdtable td.hc-v{font-family:var(--mono);color:var(--ink);}
+  .holdtable td.hc-s{font-family:var(--mono);color:var(--muted);width:52px;}
+  .holdtable tr.holdtot td{background:var(--panel2);font-weight:600;font-family:var(--mono);}
+  .badge{display:inline-block;font-size:9.5px;font-family:var(--mono);padding:2px 7px;border-radius:20px;background:var(--panel2);border:1px solid var(--line-strong);color:var(--muted);margin-left:6px;letter-spacing:.02em;}
 
-  @media(max-width:640px){ .wrap{padding:14px;} header h1{font-size:21px;} .headrow{padding:14px 16px;gap:14px;} .logo{height:60px;} .divider{display:none;} .cchart{height:300px;} .cchart.tall{height:340px;} }
   .loading{padding:64px 20px;text-align:center;color:var(--muted);font-family:var(--mono);line-height:1.7;}
+  @media(max-width:640px){ .wrap{padding:14px;} #chart{height:380px;} header h1{font-size:21px;} .headrow{padding:14px 16px;gap:14px;} .logo{height:60px;} .divider{display:none;} }
 </style>
 </head>
 <body>
@@ -164,1107 +179,1157 @@
   </div>
 </header>
 
-<div id="boot" class="loading">Đang tải <b>ctck_data.json</b>…<br><span style="font-size:11px">Nếu mở trực tiếp bằng file:// trình duyệt sẽ chặn — hãy chạy qua GitHub Pages hoặc một local server.</span></div>
+<div class="wrap">
+  <div id="boot" class="loading">Đang tải <b>ctck_data.json</b>…<br><span style="font-size:11px">Nếu mở trực tiếp bằng file:// trình duyệt sẽ chặn — hãy chạy qua GitHub Pages hoặc một local server.</span></div>
 
-<div class="wrap hide" id="app">
+  <div id="app" class="hide">
+    <!-- CONTROL BAR -->
+    <div class="bar">
+      <div class="row">
+        <div class="ctrl">
+          <span class="lbl">Chế độ</span>
+          <div class="seg" id="modeSeg">
+            <button data-mode="ov" class="on">Tổng quan</button>
+            <button data-mode="compare">So sánh</button>
+            <button data-mode="break">Phân rã cấu phần</button>
+            <button data-mode="rank">Xếp hạng</button>
+            <button data-mode="share">Thị phần</button>
+            <button data-mode="val">Định giá</button>
+            <button data-mode="season">Mùa vụ</button>
+          </div>
+        </div>
 
-  <div class="bar">
-    <div class="row">
-      <div class="ctrl">
-        <span class="lbl">Chế độ</span>
-        <div class="seg" id="modeSeg">
-          <button data-mode="overview" class="on">Tổng quan</button>
-          <button data-mode="revenue">Cơ cấu doanh thu</button>
-          <button data-mode="proprietary">Danh mục tự doanh</button>
-          <button data-mode="marketshare">Thị phần</button>
-          <button data-mode="ranking">Xếp hạng</button>
-          <button data-mode="valuation">Định giá</button>
-          <button data-mode="season">Mùa vụ</button>
+        <!-- overview + compare: company picker -->
+        <div class="ctrl mctl mode-ov mode-compare">
+          <span class="lbl">Công ty chứng khoán</span>
+          <div class="pick" id="coPick">
+            <button class="trig">Chọn công ty <span class="cnt" id="coCnt">0</span></button>
+            <div class="panel" id="coPanel"></div>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-compare">
+          <span class="lbl">Chỉ tiêu</span>
+          <div class="pick" id="metPick">
+            <button class="trig">Chọn chỉ tiêu <span class="cnt" id="metCnt">0</span></button>
+            <div class="panel" id="metPanel"></div>
+          </div>
+        </div>
+
+        <!-- breakdown controls -->
+        <div class="ctrl mctl mode-break hide">
+          <span class="lbl">Công ty</span>
+          <select id="bkCo" class="rng"></select>
+        </div>
+        <div class="ctrl mctl mode-break hide">
+          <span class="lbl">Nhóm phân rã</span>
+          <select id="bkGroup" class="rng" style="min-width:280px"></select>
+        </div>
+        <div class="ctrl mctl mode-break hide">
+          <span class="lbl">Hiển thị</span>
+          <div class="seg sm" id="bkView">
+            <button data-v="abs" class="on">Giá trị</button>
+            <button data-v="share">Tỷ trọng %</button>
+          </div>
+        </div>
+
+        <!-- valuation controls -->
+        <div class="ctrl mctl mode-val hide">
+          <span class="lbl">Xem theo</span>
+          <div class="seg sm" id="valView">
+            <button data-vv="co" class="on">Từng công ty</button>
+            <button data-vv="ind">Toàn ngành</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-val hide" id="valCoWrap">
+          <span class="lbl">Công ty</span>
+          <select id="valCo" class="rng"></select>
+        </div>
+        <div class="ctrl mctl mode-val hide">
+          <span class="lbl">Chỉ số định giá</span>
+          <div class="seg sm" id="valMetric">
+            <button data-vm="PB" class="on">P/B</button>
+            <button data-vm="PE_basic">P/E cơ bản</button>
+            <button data-vm="PE_diluted">P/E pha loãng</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-val hide" id="valBandsWrap">
+          <span class="lbl">Dải thống kê</span>
+          <div class="seg sm" id="valBands">
+            <button data-vb="1" class="on">Hiện</button>
+            <button data-vb="0">Ẩn</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-val hide" id="valIndWrap">
+          <span class="lbl">Đường bình quân ngành</span>
+          <div class="seg sm" id="valInd">
+            <button data-vi="mean" class="on">Mean</button>
+            <button data-vi="median">Median</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-val hide" id="valHiWrap">
+          <span class="lbl">Làm nổi bật</span>
+          <select id="valHi" class="rng"></select>
+        </div>
+
+        <!-- ranking controls -->
+        <div class="ctrl mctl mode-rank hide">
+          <span class="lbl">Chỉ tiêu xếp hạng</span>
+          <select id="rkMetric" class="rng" style="min-width:290px"></select>
+        </div>
+        <div class="ctrl mctl mode-rank hide">
+          <span class="lbl">Số kỳ hiển thị</span>
+          <div class="seg sm" id="rkN">
+            <button data-n="3">3</button>
+            <button data-n="4">4</button>
+            <button data-n="5" class="on">5</button>
+            <button data-n="6">6</button>
+          </div>
+        </div>
+
+        <!-- market share controls -->
+        <div class="ctrl mctl mode-share hide">
+          <span class="lbl">Kỳ</span>
+          <div class="seg sm" id="shareGran">
+            <button data-sg="q" class="on">Theo quý</button>
+            <button data-sg="y">Theo năm</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-share hide">
+          <span class="lbl">Làm nổi bật</span>
+          <select id="shareHi" class="rng"></select>
+        </div>
+
+        <!-- seasonality controls -->
+        <div class="ctrl mctl mode-season hide">
+          <span class="lbl">Xem theo</span>
+          <div class="seg sm" id="seasonView">
+            <button data-sv="co" class="on">Từng công ty</button>
+            <button data-sv="ind">Toàn ngành</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-season hide" id="seasonCoWrap">
+          <span class="lbl">Công ty</span>
+          <select id="seasonCo" class="rng"></select>
+        </div>
+        <div class="ctrl mctl mode-season hide">
+          <span class="lbl">Khoảng năm (Phần B &amp; C)</span>
+          <div class="rng">
+            <select id="seasonFrom"></select><span>→</span><select id="seasonTo"></select>
+          </div>
+        </div>
+
+        <!-- compare: sort when x-axis = company -->
+        <div class="ctrl mctl mode-compare hide" id="cmpSortWrap">
+          <span class="lbl">Sắp xếp</span>
+          <div class="seg sm" id="cmpSort">
+            <button data-s="none" class="on">Gốc</button>
+            <button data-s="desc">Giảm dần</button>
+          </div>
+        </div>
+
+        <div class="ctrl mctl mode-compare mode-break">
+          <span class="lbl">Loại biểu đồ</span>
+          <div class="seg sm" id="typeSeg">
+            <button data-t="group" class="on">Cột nhóm</button>
+            <button data-t="stack">Cột chồng</button>
+            <button data-t="line">Đường</button>
+            <button data-t="area">Vùng</button>
+            <button data-t="combo">Kết hợp</button>
+          </div>
+        </div>
+
+        <div class="ctrl mctl mode-compare">
+          <span class="lbl">Trục hoành</span>
+          <div class="seg sm" id="xSeg">
+            <button data-x="time" class="on">Thời gian</button>
+            <button data-x="co">Công ty</button>
+          </div>
+        </div>
+
+        <div class="ctrl" id="granWrap">
+          <span class="lbl">Kỳ</span>
+          <div class="seg sm" id="granSeg">
+            <button data-g="y" class="on">Năm</button>
+            <button data-g="q">Quý</button>
+          </div>
+        </div>
+
+        <div class="ctrl" id="rngWrap">
+          <span class="lbl" id="rngLbl">Khoảng thời gian</span>
+          <div class="rng">
+            <select id="rngFrom"></select><span>→</span><select id="rngTo"></select>
+          </div>
+        </div>
+
+        <div class="ctrl mctl mode-compare" id="atWrap">
+          <span class="lbl">Kỳ hiển thị</span>
+          <div class="rng"><select id="atSel"></select></div>
         </div>
       </div>
-    </div>
-    <div class="lbl" style="margin-top:14px;margin-bottom:-6px">Công ty chứng khoán</div>
-    <div class="chips" id="companyChips"></div>
-  </div>
 
-  <div class="tabpanel on" id="panel-overview">
-    <div class="sec-h">An toàn tài chính &amp; đòn bẩy</div>
-    <div class="ovgrid" id="grid-safety"></div>
-    <div class="sec-h">Hiệu quả sinh lời &amp; định giá</div>
-    <div class="ovgrid" id="grid-profit"></div>
-    <div class="sec-h">Quy mô &amp; tăng trưởng</div>
-    <div class="ovgrid" id="grid-scale"></div>
-  </div>
+      <div class="chips" id="chips"></div>
+    </div>
 
-  <div class="tabpanel" id="panel-revenue">
-    <div class="card">
-      <h2 class="ctit" id="revTitle">—</h2>
-      <div class="csub">Cơ cấu doanh thu hoạt động theo mảng nghiệp vụ qua các quý (tỷ VND)</div>
-      <div class="cchart tall" id="revChart"></div>
+    <!-- OVERVIEW GRID -->
+    <div id="ovWrap" class="hide">
+      <div class="ovmeta" id="ovMeta"></div>
+      <div class="ovgrid" id="ovGrid"></div>
+      <div class="ovfoot">Đường bị ngắt quãng = kỳ không có số liệu trong nguồn. Chỉ tiêu dòng chảy (doanh thu, lợi nhuận) chỉ hiện theo năm khi đã đủ 4 quý. Nguồn: FiinPro.</div>
     </div>
-    <div class="card">
-      <h2 class="ctit">Lãi/(lỗ) từ hoạt động đầu tư theo loại tài sản tài chính</h2>
-      <div class="csub">FVTPL &middot; AFS (sẵn sàng để bán) &middot; HTM (giữ đến đáo hạn) &middot; Cho vay &amp; phải thu (margin)</div>
-      <div class="cchart small" id="incomeChart"></div>
-    </div>
-  </div>
 
-  <div class="tabpanel" id="panel-proprietary">
-    <div class="cols2">
-      <div class="card">
-        <h2 class="ctit" id="tdTitle">—</h2>
-        <div class="csub">FVTPL &amp; AFS theo giá trị hợp lý, HTM theo giá trị ghi sổ (tỷ VND) &mdash; theo quý</div>
-        <div class="cchart tall" id="tdStackChart"></div>
-      </div>
-      <div class="card">
-        <h2 class="ctit">Cơ cấu quý gần nhất</h2>
-        <div class="csub" id="tdPieDesc"></div>
-        <div class="cchart tall" id="tdPieChart"></div>
-      </div>
+    <!-- CHART / TABLE -->
+    <div class="card" id="mainCard">
+      <h2 class="ctit" id="ctit">—</h2>
+      <div class="csub" id="csub"></div>
+      <div id="chart"></div>
+      <div id="rankWrap" class="hide"></div>
+      <div id="seasonWrap" class="hide"></div>
+      <div id="shareWrap" class="hide"></div>
+      <div class="foot" id="foot"></div>
     </div>
-    <div class="card">
-      <h2 class="ctit">Sổ sách vs. Giá trị hợp lý &mdash; lãi/(lỗ) chưa thực hiện</h2>
-      <div class="csub">So sánh giá gốc và giá trị hợp lý danh mục FVTPL + AFS theo quý</div>
-      <div class="cchart small" id="tdUnrealChart"></div>
-      <div class="foot">Không gồm HTM: theo VAS, HTM hạch toán theo giá gốc và ít khi công bố giá trị hợp lý, nên đưa vào so sánh sẽ tạo ra chênh lệch không có thật.</div>
-    </div>
-    <div class="card hide" id="tdHoldingsCard">
+
+    <div class="stats" id="stats"></div>
+
+    <!-- proprietary holdings detail (break mode, tự doanh groups) -->
+    <div class="card hide" id="tdCard" style="margin-top:16px">
       <h2 class="ctit">Chi tiết danh mục tự doanh (Q2/2026)</h2>
-      <div class="csub" id="tdHoldingsSub"></div>
+      <div class="csub" id="tdSub"></div>
       <div style="overflow-x:auto;margin-top:8px;">
         <table class="holdtable">
           <thead><tr><th class="hc-l" style="width:26px"></th><th class="hc-l">Mã / khoản mục</th><th>Giá trị hợp lý</th><th>Tỷ trọng</th></tr></thead>
-          <tbody id="tdHoldingsBody"></tbody>
+          <tbody id="tdBody"></tbody>
         </table>
       </div>
-      <div class="foot" id="tdHoldingsFoot"></div>
-    </div>
-    <p class="note" id="tdGeneralNote">Lưu ý: FiinPro chỉ công bố danh mục tự doanh theo nhóm tài sản (cổ phiếu niêm yết/chưa niêm yết, chứng chỉ quỹ, trái phiếu), không nêu đích danh từng mã cổ phiếu nắm giữ.</p>
-  </div>
-
-  <div class="tabpanel" id="panel-marketshare">
-    <div class="bar" style="margin-bottom:16px">
-      <div class="row">
-        <div class="ctrl">
-          <span class="lbl">Kỳ</span>
-          <div class="seg" id="msPeriodSeg">
-            <button data-period="quarterly" class="on">Theo quý</button>
-            <button data-period="yearly">Theo năm</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="ovgrid" id="msCompanyKpis" style="margin-bottom:16px"></div>
-
-    <div class="card">
-      <h2 class="ctit">Thị phần dư nợ cho vay margin — 13 công ty</h2>
-      <div class="csub">Dư nợ margin cuối kỳ của từng công ty / tổng dư nợ margin toàn ngành (~88 CTCK) &middot; cột viền vàng là công ty đang chọn ở trên</div>
-      <div class="seasonwrap-scroll" style="margin-top:10px"><table class="seasontable" id="msMarginTable"></table></div>
-    </div>
-
-    <div class="card">
-      <h2 class="ctit">Thị phần môi giới (giá trị giao dịch NĐT) — 13 công ty</h2>
-      <div class="csub">Giá trị giao dịch NĐT thực hiện trong kỳ của từng công ty / tổng toàn ngành (~88 CTCK)</div>
-      <div class="seasonwrap-scroll" style="margin-top:10px"><table class="seasontable" id="msBrokerTable"></table></div>
-    </div>
-
-    <p class="note" id="msFootnote"></p>
-  </div>
-
-  <div class="tabpanel" id="panel-ranking">
-    <div class="bar" style="margin-bottom:16px">
-      <div class="lbl" style="margin-bottom:8px">Chỉ tiêu xếp hạng</div>
-      <div class="chips" id="rankMetricChips" style="margin-top:0"></div>
-    </div>
-    <div class="card">
-      <h2 class="ctit" id="rankTitle">—</h2>
-      <div class="csub" id="rankDesc"></div>
-      <div class="cchart tall" id="rankChart"></div>
+      <div class="foot" id="tdFoot"></div>
     </div>
   </div>
-
-  <div class="tabpanel" id="panel-valuation">
-    <div class="bar" style="margin-bottom:16px">
-      <div class="row">
-        <div class="ctrl">
-          <span class="lbl">Xem theo</span>
-          <div class="seg" id="valViewSeg">
-            <button data-view="company" class="on">Từng công ty</button>
-            <button data-view="industry">Toàn ngành</button>
-          </div>
-        </div>
-        <div class="ctrl">
-          <span class="lbl">Chỉ số định giá</span>
-          <div class="seg" id="valMetricSeg">
-            <button data-metric="PB" class="on">P/B</button>
-            <button data-metric="PE_basic">P/E cơ bản</button>
-            <button data-metric="PE_diluted">P/E pha loãng</button>
-          </div>
-        </div>
-        <div class="ctrl" id="valBandsWrap">
-          <span class="lbl">Dải thống kê</span>
-          <div class="seg" id="valBandsSeg">
-            <button data-bands="1" class="on">Hiện</button>
-            <button data-bands="0">Ẩn</button>
-          </div>
-        </div>
-        <div class="ctrl hide" id="valIndStatWrap">
-          <span class="lbl">Đường bình quân ngành</span>
-          <div class="seg" id="valIndStatSeg">
-            <button data-stat="mean" class="on">Mean</button>
-            <button data-stat="median">Median</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2 class="ctit" id="valTitle">—</h2>
-      <div class="csub" id="valSub"></div>
-      <div class="cchart tall" id="valChart"></div>
-      <div class="foot" id="valFoot"></div>
-    </div>
-    <div class="stats" id="valStats"></div>
-  </div>
-
-  <div class="tabpanel" id="panel-season">
-    <div class="bar" style="margin-bottom:16px">
-      <div class="row">
-        <div class="ctrl">
-          <span class="lbl">Xem theo</span>
-          <div class="seg" id="seasonViewSeg">
-            <button data-view="company" class="on">Từng công ty</button>
-            <button data-view="industry">Toàn ngành</button>
-          </div>
-        </div>
-        <div class="ctrl">
-          <span class="lbl">Khoảng năm (Phần B &amp; C)</span>
-          <div class="row" style="gap:8px">
-            <select id="seasonFrom" class="hbtn" style="padding:8px 10px"></select>
-            <span style="align-self:center;color:var(--muted)">→</span>
-            <select id="seasonTo" class="hbtn" style="padding:8px 10px"></select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2 class="ctit" id="seasonTitle">—</h2>
-      <div class="csub" id="seasonSub"></div>
-      <div id="seasonWrap" style="margin-top:10px"></div>
-    </div>
-  </div>
-
-  <div class="pagefoot">Dữ liệu: FiinProX &middot; Đơn vị tiền tệ: tỷ VND trừ khi có chú thích khác &middot; Dashboard đang trong quá trình bổ sung dữ liệu</div>
 </div>
 
-<script>function initApp(){
-"use strict";
+<script></script>
+<script></script>
+<script>/* Virtus Prosperity · Dashboard ngành Chứng khoán
+   Kiến trúc & giao diện port nguyên từ dashboard ngành ngân hàng
+   (https://virtusprosperity.github.io/web-dashboard-bank/) để 2 dashboard
+   dùng chung một ngôn ngữ thao tác: picker đa chọn + chips, lưới Tổng quan,
+   1 khung biểu đồ dùng chung, kỳ Năm/Quý + khoảng thời gian. */
 
-const COMPANIES = DATA.meta.companies;
-const RATIO_COS = new Set(DATA.meta.ratio_companies);
-const PERIODS = DATA.periods; // chronological ascending
-
-let state = { company: COMPANIES.includes("VND") ? "VND" : COMPANIES[0], mode: "overview", rankMetric: "roe" };
-
-// ---------- chart colors (fixed palette, matches bank dashboard tokens) ----------
-const CC = {
-  axis:"#8C8276", grid:"#E8E2D6", spark:"#9B7B47", text:"#211C16", panel:"#FFFFFF",
-  good:"#4F6F52", bad:"#8C3B3B", warn:"#B98A2E"
-};
-// same qualitative series palette as the bank dashboard, gold-led
 const PALETTE = ['#9B7B47','#3C5A6E','#8C3B3B','#4F6F52','#B08A4F','#5A4A6A','#2F6F73','#8A5A3C',
-  '#41607F','#7C4B5C','#3F5E4B','#6B4F3A','#94703F','#4A5468','#7A3F4A','#566B3C'];
+                 '#41607F','#7C4B5C','#3F5E4B','#6B4F3A','#94703F','#4A5468','#7A3F4A','#566B3C',
+                 '#476B82','#615070','#86523F','#3E6660','#A07A4A','#7B5340','#445F73','#5C5C6E'];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let DB, M_BY_ID={}, CO_COLOR={}, chart;
 
-// ---------- formatting helpers ----------
-function fmtNum(v, decimals){
-  if (v === null || v === undefined || isNaN(v)) return "—";
-  return Number(v).toLocaleString("en-US",{minimumFractionDigits:decimals, maximumFractionDigits:decimals});
-}
-function fmtBn(v){ return fmtNum(v, 0); } // tỷ VND, no decimals
-function fmtPct(v, decimals){ if (v===null||v===undefined||isNaN(v)) return "—"; return fmtNum(v*100, decimals===undefined?1:decimals)+"%"; }
-function fmtX(v, decimals){ if (v===null||v===undefined||isNaN(v)) return "—"; return fmtNum(v, decimals===undefined?2:decimals)+"x"; }
-function fmtVnd(v){ if (v===null||v===undefined||isNaN(v)) return "—"; return fmtNum(v,0)+" đ"; }
-
-// ---------- data access ----------
-function seriesFor(ticker, metric){
-  const d = (DATA.data[ticker] && DATA.data[ticker][metric]) || {};
-  return PERIODS.filter(p => d[p] !== undefined && d[p] !== null).map(p => ({period:p, value:+d[p]}));
-}
-function latestPair(ticker, metric){
-  const s = seriesFor(ticker, metric);
-  if (!s.length) return {latest:null, prev:null, period:null};
-  const latest = s[s.length-1];
-  const prev = s.length>1 ? s[s.length-2] : null;
-  return {latest: latest.value, prev: prev?prev.value:null, period: latest.period};
-}
-function computedMarginPct(ticker){
-  const loan = latestPair(ticker,"margin_loan_book");
-  const eq = latestPair(ticker,"total_equity");
-  if (loan.latest===null || eq.latest===null || eq.latest===0) return {value:null, period:null};
-  return {value: loan.latest/eq.latest, period: loan.period};
-}
-
-// ---------- metric registry ----------
-const METRICS = {
-  total_assets:      {label:"Tổng tài sản", unit:"tỷ VND", fmt:fmtBn, higherBetter:null},
-  total_equity:      {label:"Vốn chủ sở hữu", unit:"tỷ VND", fmt:fmtBn, higherBetter:null},
-  margin_loan_book:  {label:"Dư nợ cho vay margin", unit:"tỷ VND", fmt:fmtBn, higherBetter:null},
-  debt_total_equity: {label:"Nợ vay / VCSH", unit:"lần", fmt:fmtX, higherBetter:false},
-  liab_equity:       {label:"Nợ phải trả / VCSH", unit:"lần", fmt:fmtX, higherBetter:false},
-  current_ratio:     {label:"Hệ số thanh toán hiện thời", unit:"lần", fmt:fmtX, higherBetter:true},
-  roe:               {label:"ROE", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
-  roa:               {label:"ROA", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
-  net_margin:        {label:"Biên lợi nhuận thuần", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
-  pb:                {label:"P/B", unit:"lần", fmt:fmtX, higherBetter:null},
-  pe_basic:          {label:"P/E", unit:"lần", fmt:fmtX, higherBetter:null},
-  eps_basic:         {label:"EPS", unit:"đ/CP", fmt:fmtVnd, higherBetter:true},
-  revenue_net:       {label:"Doanh thu thuần (quý)", unit:"tỷ VND", fmt:fmtBn, higherBetter:true},
-  net_profit:        {label:"Lợi nhuận sau thuế (quý)", unit:"tỷ VND", fmt:fmtBn, higherBetter:true},
-  growth_revenue_yoy:{label:"Tăng trưởng doanh thu YoY", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
-  growth_equity_yoy: {label:"Tăng trưởng VCSH YoY", unit:"%", fmt:v=>fmtPct(v,1), higherBetter:true},
+const state={
+  mode:'ov',
+  cos:[], metrics:[],
+  type:'group', xaxis:'time', gran:'y',
+  from:0, to:0, at:0,
+  bkCo:null, bkGroup:null, bkView:'abs',
+  valView:'co', valCo:null, valMetric:'PB', valBands:true, valIndStat:'mean', valHi:'',
+  rkMetric:null, rkN:5, cmpSort:'none',
+  shareGran:'q', shareHi:'',
+  seasonView:'co', seasonCo:null, seasonFrom:null, seasonTo:null
 };
 
-const SAFETY_IDS  = ["total_assets","total_equity","margin_loan_book","__margin_threshold__","debt_total_equity","current_ratio"];
-const PROFIT_IDS  = ["roe","roa","net_margin","pb","pe_basic","eps_basic"];
-const SCALE_IDS   = ["revenue_net","net_profit","growth_revenue_yoy","growth_equity_yoy"];
-
-const RANK_METRIC_OPTIONS = [
-  ["total_assets","Tổng tài sản"], ["total_equity","Vốn chủ sở hữu"], ["margin_loan_book","Dư nợ margin"],
-  ["__margin_pct__","Margin / VCSH (%)"], ["roe","ROE"], ["roa","ROA"], ["net_margin","Biên LN thuần"],
-  ["pb","P/B"], ["pe_basic","P/E"], ["revenue_net","Doanh thu thuần (quý)"], ["net_profit","LNST (quý)"],
-  ["growth_revenue_yoy","Tăng trưởng DT YoY"],
-];
-
-// ---------- chart helpers ----------
-const charts = {}; // id -> echarts instance
-function getChart(elId){
-  if (charts[elId]) return charts[elId];
-  const el = document.getElementById(elId);
-  const c = echarts.init(el, null, {renderer:"svg"});
-  charts[elId] = c;
-  return c;
+/* ---------- formatting ---------- */
+function fmtBn(v){
+  if(v==null||isNaN(v)) return '–';
+  const a=Math.abs(v);
+  if(a>=1e6) return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tr tỷ';
+  if(a>=1e3) return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:1})+' ng tỷ';
+  return v.toLocaleString('vi-VN',{maximumFractionDigits:1})+' tỷ';
 }
-function disposeMiniCharts(prefix){
-  Object.keys(charts).forEach(k=>{
-    if (k.startsWith(prefix)){ charts[k].dispose(); delete charts[k]; }
+function fmtAxisBn(v){
+  const a=Math.abs(v);
+  if(a>=1e6) return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+'M';
+  if(a>=1e3) return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:0})+'K';
+  return v.toLocaleString('vi-VN',{maximumFractionDigits:0});
+}
+function fmtPct(v){ return v==null||isNaN(v)?'–':v.toLocaleString('vi-VN',{maximumFractionDigits:2})+'%'; }
+function fmtVnd(v){ return v==null||isNaN(v)?'–':Math.round(v).toLocaleString('vi-VN')+' đ'; }
+function fmtVal(unit,v){
+  if(unit==='pct') return fmtPct(v);
+  if(unit==='x')   return v==null||isNaN(v)?'–':v.toFixed(2)+'x';
+  if(unit==='vnd') return fmtVnd(v);
+  return fmtBn(v);
+}
+const UNIT_LBL={bn:'tỷ đồng',pct:'%',x:'lần',vnd:'đồng/CP'};
+function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- data access ---------- */
+function periodsAll(){ return state.gran==='y'?DB.periods.years:DB.periods.quarters; }
+function rangeList(){ return periodsAll().slice(state.from, state.to+1); }
+function getVal(co, mid){ const d=DB.data[co]&&DB.data[co][mid]; if(!d)return null; const g=d[state.gran]; return g?g:null; }
+function val(co, mid, period){ const g=getVal(co,mid); const v=g?g[period]:null; return v==null?0:v; }
+// giá trị thô: kỳ không có số liệu trả về null (đứt nét) thay vì 0,
+// vì với các tỷ lệ (ROE, biên LN…) số 0 sẽ gây hiểu nhầm
+function rawVal(co, mid, period){
+  const g=getVal(co,mid); if(!g) return null;
+  const v=g[period]; return v==null?null:Math.round(v*100)/100;
+}
+function hasAny(mid){ for(const c in DB.data){ const d=DB.data[c][mid]; if(d&&(d.y||d.q))return true; } return false; }
+
+/* ---------- build pickers ---------- */
+function buildCoPanel(){
+  const p=$('#coPanel');
+  let h='<div class="srch"><input placeholder="Tìm công ty…" oninput="filterPanel(this,\'#coPanel\')"></div>';
+  h+='<div class="ptools"><a onclick="allCos(true)">Chọn tất cả</a><a onclick="allCos(false)">Bỏ chọn</a></div><div class="list">';
+  DB.meta.companies.forEach(c=>{
+    h+=`<label class="opt" data-s="${c.toLowerCase()}"><input type="checkbox" value="${c}" onchange="toggleCo(this)">
+        <span class="dot" style="background:${CO_COLOR[c]}"></span><span class="nm">${c}</span></label>`;
   });
+  p.innerHTML=h+'</div>';
 }
-const AXIS_TEXT = {color:CC.axis, fontFamily:"IBM Plex Mono", fontSize:10};
-const GRID_LINE = {lineStyle:{color:CC.grid}};
-const LEGEND_TEXT = {fontSize:11, fontFamily:"IBM Plex Sans", color:CC.text};
-
-function sparkOption(periods, values, color){
-  const c = color||CC.spark;
-  return {
-    animation:false,
-    grid:{left:0,right:0,top:4,bottom:0},
-    xAxis:{type:"category", show:false, data:periods},
-    yAxis:{type:"value", show:false, scale:true},
-    series:[{type:"line", data:values, showSymbol:false, lineStyle:{color:c, width:1.6},
-      areaStyle:{color:{type:"linear", x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:c+"33"},{offset:1,color:c+"00"}]}}}],
-    tooltip:{trigger:"axis", formatter:function(p){return p[0].axisValue+": "+fmtNum(p[0].data,1);},
-      textStyle:{fontSize:11}, extraCssText:"box-shadow:0 2px 8px rgba(0,0,0,.1);"}
-  };
-}
-
-// ---------- overview KPI card rendering ----------
-function windowSeries(ticker, metric, n){
-  const s = seriesFor(ticker, metric);
-  return s.slice(Math.max(0, s.length-n));
-}
-
-function deltaBadge(latest, prev, higherBetter){
-  if (latest===null || prev===null || prev===0) return {cls:"flat", text:"—"};
-  const d = (latest-prev)/Math.abs(prev)*100;
-  const cls = Math.abs(d)<0.5 ? "flat" : (higherBetter===false ? (d>0?"down":"up") : (d>0?"up":"down"));
-  const arrow = d>0?"▲":(d<0?"▼":"·");
-  return {cls, text: arrow+" "+fmtNum(Math.abs(d),1)+"% qoq"};
-}
-
-function makeCard(container, metricId, ticker){
-  const card = document.createElement("div");
-  card.className = "ovcard";
-
-  if (metricId === "__margin_threshold__"){
-    const m = computedMarginPct(ticker);
-    const pct = m.value===null ? null : m.value*100;
-    const cap = 200;
-    const used = pct===null ? 0 : Math.min(100, pct/cap*100);
-    let barColor = CC.good;
-    if (pct!==null){ if (pct>=180) barColor=CC.bad; else if (pct>=140) barColor=CC.warn; }
-    card.classList.add("threshold");
-    card.innerHTML = `
-      <div class="period">${m.period||""}</div>
-      <div class="label">Margin cho vay / Vốn chủ sở hữu <span class="badge${pct!==null&&pct>=180?" warn":""}">trần 200%</span></div>
-      <div class="value-row"><span class="value">${pct===null?"—":fmtNum(pct,1)}</span><span class="unit">%</span></div>
-      <div class="bar-outer"><div class="bar-inner" style="width:${used}%; background:${barColor}"></div></div>
-      <div class="cap-note">${pct===null?"Chưa có dữ liệu":"Dư địa còn lại: <span class=\"headroom\">"+fmtNum(Math.max(0,cap-pct),1)+"%</span> so với trần"}</div>
-    `;
-    container.appendChild(card);
-    return;
-  }
-
-  const meta = METRICS[metricId];
-  const {latest, prev, period} = latestPair(ticker, metricId);
-  const delta = deltaBadge(latest, prev, meta.higherBetter);
-  const chartId = "spark_"+metricId+"_"+ticker;
-  card.innerHTML = `
-    <div class="period">${period||""}</div>
-    <div class="label">${meta.label}</div>
-    <div class="value-row"><span class="value">${meta.fmt(latest)}</span><span class="unit">${latest!==null?meta.unit:""}</span></div>
-    <div class="delta ${delta.cls}">${delta.text}</div>
-    <div class="ovspark" id="${chartId}"></div>
-  `;
-  container.appendChild(card);
-  const w = windowSeries(ticker, metricId, 16);
-  if (w.length>1){
-    requestAnimationFrame(()=>{
-      const c = getChart(chartId);
-      c.setOption(sparkOption(w.map(x=>x.period), w.map(x=>x.value)));
+function buildMetricPanel(){
+  const p=$('#metPanel');
+  let h='<div class="srch"><input placeholder="Tìm chỉ tiêu… (vd: doanh thu, ROE, margin)" oninput="filterPanel(this,\'#metPanel\')"></div>';
+  h+='<div class="ptools"><a onclick="collapseAll(true)">Thu gọn</a><a onclick="collapseAll(false)">Mở rộng</a></div><div class="list">';
+  DB.sections.forEach(sec=>{
+    const ms=DB.metrics.filter(m=>m.section===sec.id && hasAny(m.id));
+    if(!ms.length) return;
+    h+=`<div class="sec-h" data-sec="${sec.id}" onclick="toggleSec('${sec.id}')"><span>${sec.name}</span><span>${ms.length} ▾</span></div>`;
+    ms.forEach(m=>{
+      const pad=8+m.level*14;
+      h+=`<label class="opt sec-${sec.id}" data-s="${m.label.toLowerCase()}" style="padding-left:${pad}px">
+          <input type="checkbox" value="${m.id}" onchange="toggleMetric(this)">
+          <span class="nm">${m.label}</span><span class="u">${UNIT_LBL[m.unit]}</span></label>`;
     });
-  }
+  });
+  p.innerHTML=h+'</div>';
+}
+function filterPanel(inp,sel){
+  const q=inp.value.trim().toLowerCase();
+  $$(`${sel} .opt`).forEach(o=>{ o.style.display = !q||o.dataset.s.includes(q) ? '' : 'none'; });
+  $$(`${sel} .sec-h`).forEach(s=>{ s.style.display = q?'none':''; });
+}
+function toggleSec(sc){ $$(`#metPanel .sec-${sc}`).forEach(o=>o.classList.toggle('hide')); }
+function collapseAll(c){ $$('#metPanel .opt[class*="sec-"]').forEach(o=>o.classList.toggle('hide',c)); }
+
+/* ---------- selection handlers ---------- */
+function toggleCo(cb){
+  if(cb.checked){ if(!state.cos.includes(cb.value)) state.cos.push(cb.value); }
+  else state.cos=state.cos.filter(c=>c!==cb.value);
+  $('#coCnt').textContent=state.cos.length; syncChips(); render();
+}
+function allCos(on){
+  state.cos = on ? [...DB.meta.companies] : [];
+  $$('#coPanel input').forEach(i=>i.checked=on);
+  $('#coCnt').textContent=state.cos.length; syncChips(); render();
+}
+function toggleMetric(cb){
+  if(cb.checked){ if(!state.metrics.includes(cb.value)) state.metrics.push(cb.value); }
+  else state.metrics=state.metrics.filter(m=>m!==cb.value);
+  $('#metCnt').textContent=state.metrics.length; syncChips(); render();
+}
+function removeChip(kind,v){
+  if(kind==='c'){ state.cos=state.cos.filter(c=>c!==v); const el=$(`#coPanel input[value="${v}"]`); if(el)el.checked=false; $('#coCnt').textContent=state.cos.length; }
+  else { state.metrics=state.metrics.filter(m=>m!==v); const el=$(`#metPanel input[value="${CSS.escape(v)}"]`); if(el)el.checked=false; $('#metCnt').textContent=state.metrics.length; }
+  syncChips(); render();
+}
+function syncChips(){
+  if(['break','val','season','rank','share'].includes(state.mode)){ $('#chips').innerHTML=''; return; }
+  let h='';
+  state.cos.forEach(c=>{ h+=`<span class="chip"><span class="dot" style="background:${CO_COLOR[c]}"></span>${c}<button class="x" onclick="removeChip('c','${c}')">×</button></span>`; });
+  if(state.mode==='compare')
+    state.metrics.forEach(mid=>{ const m=M_BY_ID[mid]; if(m) h+=`<span class="chip">${m.label}<button class="x" onclick="removeChip('m','${mid}')">×</button></span>`; });
+  $('#chips').innerHTML=h;
+}
+
+/* ---------- range selectors ---------- */
+function fillRange(){
+  const ps=periodsAll();
+  ['#rngFrom','#rngTo','#atSel'].forEach(id=>$(id).innerHTML=ps.map((p,i)=>`<option value="${i}">${p}</option>`).join(''));
+  const span=state.gran==='y'?8:12;
+  state.from=Math.max(0, ps.length-span); state.to=ps.length-1; state.at=ps.length-1;
+  $('#rngFrom').value=state.from; $('#rngTo').value=state.to; $('#atSel').value=state.at;
+  $('#rngLbl').textContent = state.gran==='y'?'Khoảng năm':'Khoảng quý';
+}
+
+/* ---------- breakdown setup ---------- */
+function buildBreakdownControls(){
+  $('#bkCo').innerHTML=DB.meta.companies.map(c=>`<option>${c}</option>`).join('');
+  $('#bkGroup').innerHTML=DB.breakdowns.map((g,i)=>`<option value="${i}">${g.name}</option>`).join('');
+  state.bkCo=DB.meta.companies[0]; state.bkGroup=0;
+}
+function groupComponents(gi){
+  const g=DB.breakdowns[gi]; if(!g) return [];
+  return g.metrics.map(id=>M_BY_ID[id]).filter(Boolean);
+}
+
+/* ---------- overview (preset charts) ---------- */
+let OV_LIST=[], OV_INST=[];
+
+function buildOverview(){
+  OV_LIST=DB.ov_charts.filter(c=>M_BY_ID[c.id]);
+  $('#ovGrid').innerHTML=OV_LIST.map((c,i)=>{
+    const m=M_BY_ID[c.id];
+    return `
+    <div class="ovcard">
+      <div class="ovhead">
+        <div><h3 class="ovtit">${c.t}</h3><div class="ovsub">${c.sub} · ${UNIT_LBL[m.unit]}</div></div>
+        <div class="ovbtns">
+          <button title="Mở trong chế độ So sánh" onclick="openInCompare(${i})">⤢</button>
+          <button title="Xuất ảnh PNG" onclick="exportOv(${i})">↓</button>
+        </div>
+      </div>
+      <div class="ovchart" id="ov${i}"></div>
+    </div>`;
+  }).join('');
+  OV_INST=OV_LIST.map(()=>null);
 }
 
 function renderOverview(){
-  disposeMiniCharts("spark_");
-  const gS = document.getElementById("grid-safety"); gS.innerHTML="";
-  const gP = document.getElementById("grid-profit"); gP.innerHTML="";
-  const gK = document.getElementById("grid-scale"); gK.innerHTML="";
-  SAFETY_IDS.forEach(id=>makeCard(gS, id, state.company));
-  PROFIT_IDS.forEach(id=>makeCard(gP, id, state.company));
-  SCALE_IDS.forEach(id=>makeCard(gK, id, state.company));
-}
-
-// ---------- revenue tab ----------
-const REV_SEGMENTS = [
-  ["revenue_brokerage","Môi giới"], ["revenue_advisory","Tư vấn đầu tư"],
-  ["revenue_underwriting","Bảo lãnh phát hành"], ["revenue_agency_issuance","Đại lý phát hành"],
-  ["revenue_custody","Lưu ký"], ["revenue_financial_advisory","Tư vấn tài chính"],
-  ["revenue_other","Khác"],
-];
-const INCOME_TYPES = [
-  ["income_fvtpl","Lãi FVTPL"], ["income_afs","Lãi AFS"], ["income_htm","Lãi HTM"], ["income_lending","Lãi cho vay & phải thu (margin)"],
-];
-
-function renderRevenue(){
-  document.getElementById("revTitle").textContent = "Cơ cấu doanh thu — "+state.company;
-  const n = 16;
-  const periods = PERIODS.slice(-n);
-  const c1 = getChart("revChart");
-  const series1 = REV_SEGMENTS.map(([id,label],i)=>{
-    const d = (DATA.data[state.company][id])||{};
-    return {name:label, type:"bar", stack:"rev", data:periods.map(p=>d[p]!==undefined?+d[p]:0),
-      itemStyle:{color:PALETTE[i%PALETTE.length]}};
+  const cos=state.cos, ps=rangeList();
+  $('#ovMeta').textContent = cos.length
+    ? `${cos.length} công ty · ${state.gran==='y'?'theo năm':'theo quý'} · ${ps[0]}–${ps[ps.length-1]}`
+    : 'Chọn ít nhất 1 công ty để xem các chỉ số tổng quan.';
+  OV_LIST.forEach((c,i)=>{
+    const el=$('#ov'+i); if(!el) return;
+    if(!OV_INST[i]) OV_INST[i]=echarts.init(el);
+    const inst=OV_INST[i], m=M_BY_ID[c.id];
+    const series=cos.map(b=>({
+      name:b, type:'line',
+      data:ps.map(p=>rawVal(b,c.id,p)),
+      itemStyle:{color:CO_COLOR[b]}, lineStyle:{color:CO_COLOR[b],width:1.8},
+      symbol:'circle', symbolSize:3.5, connectNulls:false, emphasis:{focus:'series'}
+    }));
+    const empty=!cos.length || series.every(s=>s.data.every(v=>v==null));
+    inst.clear();
+    if(empty){
+      inst.setOption({graphic:{type:'text',left:'center',top:'middle',
+        style:{text:cos.length?`Không có số liệu ${state.gran==='y'?'năm':'quý'} cho chỉ số này`:'Chưa chọn công ty',
+        fill:'#8C8276',font:'12px IBM Plex Sans'}}});
+      return;
+    }
+    inst.setOption({
+      textStyle:{fontFamily:'IBM Plex Sans'},
+      tooltip:{trigger:'axis',backgroundColor:'#211C16',borderColor:'#211C16',
+        textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:11},
+        formatter:params=>{
+          let s=`<div style="font-weight:600;margin-bottom:3px">${params[0].axisValue}</div>`;
+          [...params].filter(p=>p.value!=null).sort((a,b)=>b.value-a.value).forEach(p=>{
+            s+=`<div style="display:flex;justify-content:space-between;gap:12px"><span>${p.marker}${p.seriesName}</span><b>${fmtVal(m.unit,p.value)}</b></div>`;
+          });
+          return s;
+        }},
+      grid:{left:m.unit==='bn'||m.unit==='vnd'?54:44, right:12, top:12, bottom:26},
+      xAxis:{type:'category',data:ps,
+        axisLabel:{fontFamily:'IBM Plex Mono',fontSize:10,rotate:ps.length>9?38:0,interval:ps.length>20?'auto':0},
+        axisTick:{show:false}, axisLine:{lineStyle:{color:'#D8CFBE'}}},
+      yAxis:{type:'value',scale:m.unit!=='bn',
+        splitLine:{lineStyle:{color:'#EFE9DD'}},
+        axisLabel:{fontFamily:'IBM Plex Mono',fontSize:10,
+          formatter:v=> m.unit==='pct'?v+'%' : m.unit==='x'?v.toFixed(1) : fmtAxisBn(v)}},
+      series
+    },true);
   });
-  c1.setOption({
-    animation:false,
-    tooltip:{trigger:"axis", axisPointer:{type:"shadow"}},
-    legend:{bottom:0, textStyle:LEGEND_TEXT},
-    grid:{left:50, right:16, top:20, bottom:60},
-    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
-    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
-    series:series1
-  }, true);
-
-  const c2 = getChart("incomeChart");
-  const series2 = INCOME_TYPES.map(([id,label],i)=>{
-    const d = (DATA.data[state.company][id])||{};
-    return {name:label, type:"line", data:periods.map(p=>d[p]!==undefined?+d[p]:null),
-      itemStyle:{color:PALETTE[i%PALETTE.length]}, smooth:false, connectNulls:true};
-  });
-  c2.setOption({
-    animation:false,
-    tooltip:{trigger:"axis"},
-    legend:{bottom:0, textStyle:LEGEND_TEXT},
-    grid:{left:50, right:16, top:20, bottom:50},
-    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
-    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
-    series:series2
-  }, true);
 }
 
-// ---------- proprietary book (tự doanh) tab ----------
-// FVTPL & AFS are mark-to-market by definition -> use fair value.
-// HTM is held at amortized cost under VAS and fair value is rarely disclosed,
-// so we use its book/cost value (its actual carrying amount) instead of fair value.
-const TD_CLASSES = [["fvtpl_fv_total","FVTPL"], ["afs_fv_total","AFS (sẵn sàng để bán)"], ["htm_cost_total","HTM (giữ đến đáo hạn, giá trị ghi sổ)"]];
-const TD_ASSET_TYPES = [
-  {key:"listed", label:"Cổ phiếu niêm yết", parts:["fvtpl_fv_listed","afs_fv_listed","htm_cost_listed"]},
-  {key:"unlisted", label:"Cổ phiếu chưa niêm yết / Khác", parts:["fvtpl_fv_unlisted","afs_fv_unlisted","htm_cost_unlisted"]},
-  {key:"fundcert", label:"Chứng chỉ quỹ", parts:["fvtpl_fv_fundcert","afs_fv_fundcert","htm_cost_fundcert"]},
-  {key:"bond", label:"Trái phiếu", parts:["fvtpl_fv_bond","afs_fv_bond","htm_cost_bond"]},
-];
-
-function sumParts(ticker, parts, period){
-  let sum = 0, any=false;
-  parts.forEach(p=>{
-    const d = DATA.data[ticker][p];
-    if (d && d[period]!==undefined){ sum += +d[period]; any=true; }
-  });
-  return any ? sum : null;
+function exportOv(i){
+  if(!OV_INST[i]) return;
+  const url=OV_INST[i].getDataURL({pixelRatio:2,backgroundColor:'#fff'});
+  const a=document.createElement('a'); a.href=url;
+  a.download='vp-ctck-'+OV_LIST[i].t.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.png'; a.click();
+}
+function openInCompare(i){
+  const c=OV_LIST[i];
+  state.metrics=[c.id];
+  $$('#metPanel input').forEach(cb=>cb.checked=(cb.value===c.id));
+  $('#metCnt').textContent=1;
+  setMode('compare');
 }
 
-function renderProprietary(){
-  const ticker = state.company;
-  document.getElementById("tdTitle").textContent = "Danh mục tự doanh — "+ticker;
-  const n = 16;
-  const periods = PERIODS.slice(-n);
-
-  const c1 = getChart("tdStackChart");
-  const series1 = TD_CLASSES.map(([id,label],i)=>{
-    const d = DATA.data[ticker][id]||{};
-    return {name:label, type:"bar", stack:"td", data:periods.map(p=>d[p]!==undefined?+d[p]:0),
-      itemStyle:{color:PALETTE[i%PALETTE.length]}};
-  });
-  c1.setOption({
-    animation:false,
-    tooltip:{trigger:"axis", axisPointer:{type:"shadow"}},
-    legend:{bottom:0, textStyle:LEGEND_TEXT},
-    grid:{left:55, right:16, top:20, bottom:50},
-    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
-    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
-    series:series1
-  }, true);
-
-  // latest period with any td data
-  let latestP = null;
-  for (let i=PERIODS.length-1;i>=0;i--){
-    const p = PERIODS[i];
-    const has = TD_CLASSES.some(([id])=> (DATA.data[ticker][id]||{})[p]!==undefined);
-    if (has){ latestP = p; break; }
-  }
-  document.getElementById("tdPieDesc").textContent = latestP ? ("Quý "+latestP+" — phân bổ theo loại tài sản (tất cả các nhóm FVTPL/AFS/HTM)") : "Chưa có dữ liệu";
-  const pieData = TD_ASSET_TYPES.map((t,i)=>({name:t.label, value: latestP ? (sumParts(ticker,t.parts,latestP)||0) : 0})).filter(x=>x.value>0);
-  const c2 = getChart("tdPieChart");
-  c2.setOption({
-    animation:false,
-    tooltip:{trigger:"item", formatter:p=>p.name+": "+fmtNum(p.value,0)+" tỷ ("+p.percent+"%)"},
-    legend:{bottom:0, textStyle:LEGEND_TEXT},
-    series:[{type:"pie", radius:["35%","68%"], center:["50%","44%"], data:pieData,
-      itemStyle:{borderColor:CC.panel, borderWidth:2},
-      label:{fontSize:11, fontFamily:"IBM Plex Sans", color:CC.text},
-      color:PALETTE}]
-  }, true);
-
-  // unrealized gain/loss — FVTPL + AFS only. HTM is excluded: under VAS it is held
-  // at amortized cost and its fair value is rarely disclosed, so cost≈carrying value
-  // and comparing it to a mostly-blank fair value column would fabricate a fake loss.
-  const c3 = getChart("tdUnrealChart");
-  const costIds = ["fvtpl_cost_total","afs_cost_total"];
-  const fvIds = ["fvtpl_fv_total","afs_fv_total"];
-  const costSeries = periods.map(p=>{ let s=0,any=false; costIds.forEach(id=>{const d=DATA.data[ticker][id]; if(d&&d[p]!==undefined){s+=+d[p];any=true;}}); return any?s:null; });
-  const fvSeries = periods.map(p=>{ let s=0,any=false; fvIds.forEach(id=>{const d=DATA.data[ticker][id]; if(d&&d[p]!==undefined){s+=+d[p];any=true;}}); return any?s:null; });
-  const unrealSeries = periods.map((p,i)=> (costSeries[i]!==null && fvSeries[i]!==null) ? (fvSeries[i]-costSeries[i]) : null);
-  c3.setOption({
-    animation:false,
-    tooltip:{trigger:"axis"},
-    legend:{bottom:0, textStyle:LEGEND_TEXT},
-    grid:{left:55, right:16, top:20, bottom:50},
-    xAxis:{type:"category", data:periods, axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
-    yAxis:{type:"value", name:"tỷ VND", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
-    series:[
-      {name:"Giá gốc", type:"line", data:costSeries, itemStyle:{color:"#8C8276"}, connectNulls:true},
-      {name:"Giá trị hợp lý", type:"line", data:fvSeries, itemStyle:{color:CC.spark}, connectNulls:true},
-      {name:"Lãi/(lỗ) chưa thực hiện", type:"bar", data:unrealSeries,
-        itemStyle:{color:function(p){return p.data>=0 ? CC.good : CC.bad;}}},
-    ]
-  }, true);
-
-  renderHoldings(ticker);
+/* ---------- main render ---------- */
+function render(){
+  if(state.mode==='ov') renderOverview();
+  else if(state.mode==='compare') renderCompare();
+  else if(state.mode==='val') renderVal();
+  else if(state.mode==='rank') renderRank();
+  else if(state.mode==='season') renderSeason();
+  else if(state.mode==='share') renderShare();
+  else renderBreak();
 }
+function seriesColor(i){ return PALETTE[i%PALETTE.length]; }
 
-// ---------- ticker-level holdings detail (Q2/2026 only, 6 companies with thuyết minh BCTC PDF detail) ----------
-function escHtml(s){
-  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function renderHoldings(ticker){
-  const card = document.getElementById("tdHoldingsCard");
-  const detail = DATA.data[ticker] && DATA.data[ticker].tu_doanh_chi_tiet_q2_2026;
-  if (!detail || !detail.items || !detail.items.length){
-    card.classList.add("hide");
+/* ---------- compare ---------- */
+function renderCompare(){
+  const cos=state.cos, mets=state.metrics.map(id=>M_BY_ID[id]).filter(Boolean);
+  $('#atWrap').classList.toggle('hide', state.xaxis!=='co');
+  $('#cmpSortWrap').classList.toggle('hide', state.xaxis!=='co');
+  if(!cos.length || !mets.length){
+    $('#ctit').textContent='Chọn công ty và chỉ tiêu';
+    $('#csub').textContent=''; $('#stats').innerHTML=''; $('#foot').textContent='';
+    chart.clear();
+    chart.setOption({graphic:{type:'text',left:'center',top:'middle',style:{text:'Chọn ít nhất 1 công ty và 1 chỉ tiêu',fill:'#8C8276',font:'14px IBM Plex Sans'}}});
     return;
   }
-  card.classList.remove("hide");
-  const hasFVTPL = detail.items.some(it=>/FVTPL/.test(it.tag));
-  const hasAFS = detail.items.some(it=>/AFS/.test(it.tag));
-  const catLabel = hasFVTPL && hasAFS ? "FVTPL + AFS" : (hasFVTPL ? "FVTPL" : "AFS");
-  document.getElementById("tdHoldingsSub").textContent =
-    "Chi tiết từng khoản mục "+catLabel+" theo giá trị hợp lý (tỷ VND) — quý "+detail.period;
+  const units=new Set(mets.map(m=>m.unit));
+  const hasPct=units.has('pct'), hasAbs=[...units].some(u=>u!=='pct');
+  const dual=hasPct&&hasAbs;
+  const ps=rangeList();
+  const tlabel={group:'cột nhóm',stack:'cột chồng',line:'đường',area:'vùng',combo:'kết hợp'}[state.type];
 
-  const denom = detail.denom_ty_vnd || 0;
-  // largest-remainder rounding: displayed row values (integer ty VND) always sum to the
-  // displayed total, instead of each row rounding independently (which can be off by ±1).
-  const roundedDenom = Math.round(denom);
-  const floors = detail.items.map(it=>Math.floor(it.value));
-  let remainder = roundedDenom - floors.reduce((a,b)=>a+b,0);
-  const order = detail.items.map((it,i)=>({i, frac:it.value-floors[i]})).sort((a,b)=>b.frac-a.frac);
-  const displayVal = floors.slice();
-  for (let k=0; k<order.length && remainder>0; k++, remainder--){ displayVal[order[k].i] += 1; }
+  let xData, series=[], sUnits=[];
+  const onRight=u=>dual&&u==='pct';
+  const stacked=(state.type==='stack'||state.type==='area');
+  // Chỉ chồng các chuỗi nằm trên CÙNG một trục: nếu không, chuỗi % (trục phải)
+  // sẽ bị cộng chồng lên chuỗi giá trị tuyệt đối (trục trái) và kéo thang đo
+  // trục phải lên hàng chục nghìn %.
+  const stackOf=(base,u)=> stacked ? base+'|'+(onRight(u)?'r':'l') : null;
 
-  const rows = detail.items.map((it,i)=>{
-    const pct = denom>0 ? (it.value/denom*100) : null;
-    const nameHtml = it.is_ticker
-      ? escHtml(it.label)
-      : `<span style="font-family:var(--sans);font-weight:500;">${escHtml(it.label)}</span>`;
-    return `<tr><td class="hc-r">${i+1}.</td>`
-      + `<td class="hc-l hc-t">${nameHtml}<span class="badge">${escHtml(it.tag)}</span></td>`
-      + `<td class="hc-v">${fmtNum(displayVal[i],0)}</td>`
-      + `<td class="hc-s">${pct===null?"—":fmtNum(pct,1)+"%"}</td></tr>`;
-  }).join("");
-  const totRow = `<tr class="holdtot"><td class="hc-r"></td><td class="hc-l">Tổng ${catLabel} (giá trị hợp lý)</td>`
-    + `<td class="hc-v">${fmtNum(roundedDenom,0)}</td><td class="hc-s">100%</td></tr>`;
-  document.getElementById("tdHoldingsBody").innerHTML = rows + totRow;
+  if(state.xaxis==='time'){
+    xData=ps;
+    let ci=0;
+    cos.forEach(b=>{
+      mets.forEach(m=>{
+        const name = mets.length>1 ? `${b} · ${m.label}` : b;
+        const color = mets.length>1 ? seriesColor(ci) : CO_COLOR[b];
+        series.push(makeSeries(name,color,ps.map(p=>round(val(b,m.id,p))),onRight(m.unit),stackOf(b,m.unit),state.type==='combo'?m.unit:null));
+        sUnits.push(m.unit); ci++;
+      });
+    });
+  } else {
+    const at=periodsAll()[state.at];
+    let coList=[...cos];
+    if(state.cmpSort==='desc'){ const m0=mets[0]; coList.sort((a,b)=>val(b,m0.id,at)-val(a,m0.id,at)); }
+    xData=coList;
+    mets.forEach((m,i)=>{
+      series.push(makeSeries(m.label, seriesColor(i), coList.map(b=>round(val(b,m.id,at))), onRight(m.unit), stackOf('g',m.unit), state.type==='combo'?m.unit:null));
+      sUnits.push(m.unit);
+    });
+  }
 
-  document.getElementById("tdHoldingsFoot").innerHTML =
-    "Nguồn: Thuyết minh Báo cáo tài chính (PDF) quý Q2/2026 — không phải FiinPro. Chỉ thể hiện số liệu một quý (Q2/2026), chưa có dữ liệu để so sánh qua các quý. "
-    + "\"Khác\" là phần còn lại gộp theo thuyết minh gốc, doanh nghiệp không tách rõ từng mã hoặc từng khoản mục nhỏ hơn cho phần này. "
-    + "Công ty không công bố tên từng mã cổ phiếu cụ thể trong thuyết minh thì chỉ hiện được theo nhóm tài sản (cổ phiếu niêm yết/chưa niêm yết, trái phiếu...), không có tên mã. "
-    + (detail.note ? escHtml(detail.note)+" " : "")
-    + "Đơn vị: tỷ VND.";
+  if(state.xaxis==='co' && state.type!=='stack' && state.type!=='area'){
+    series.forEach((s,i)=>{ const u=sUnits[i];
+      s.label={show:true, position:'top', fontFamily:'IBM Plex Mono', fontSize:10, color:'#6B5D4A',
+        formatter:p=> p.value==null?'':(u==='pct'? (Math.round(p.value*10)/10)+'%' : u==='x'? p.value.toFixed(2) : fmtAxisBn(p.value))};
+    });
+  }
+
+  chart.setOption(baseOpt(xData, series, dual, mets, sUnits), true);
+
+  $('#ctit').textContent = mets.length===1 ? mets[0].label : `${mets.length} chỉ tiêu × ${cos.length} công ty`;
+  const rangeTxt = state.xaxis==='co' ? ('kỳ '+periodsAll()[state.at]) : (ps[0]+'–'+ps[ps.length-1]);
+  $('#csub').textContent = `${tlabel} · trục hoành: ${state.xaxis==='time'?'thời gian':'công ty'} · ${rangeTxt}`;
+  $('#foot').innerHTML = `Đơn vị: ${[...units].map(u=>UNIT_LBL[u]).join(', ')}. `+
+    (dual?'Trục trái = giá trị tuyệt đối, trục phải = %. ':'')+
+    'Ô trống trong nguồn được tính bằng 0. '+
+    (state.gran==='y'?'Chỉ tiêu dòng chảy chỉ có số liệu năm khi đã đủ 4 quý. ':'')+
+    'Nguồn: FiinPro.';
+  renderStatsCompare(cos, mets);
 }
 
-// ---------- market share tab (thị phần margin & môi giới, toàn ngành ~88 CTCK) ----------
-// Rendered as heatmap tables (giống style bảng "Mùa vụ" của dashboard bank) thay vì line
-// chart nhiều màu — 13 công ty vẽ chung 1 biểu đồ đường sẽ rất rối mắt, bảng dễ đọc hơn.
-let msState = { period: "quarterly" };
-
-function msValueFor(ticker, metric, periodKind, p){
-  const key = periodKind === "yearly" ? metric + "_yearly" : metric;
-  const d = (DATA.data[ticker] && DATA.data[ticker][key]) || {};
-  return d[p] !== undefined ? +d[p]*100 : null;
-}
-function msSeriesFor(ticker, metric, periodKind){
-  const periods = periodKind === "yearly" ? DATA.market_share.years : DATA.market_share.quarterly_periods;
-  return periods.map(p => ({period: p, value: msValueFor(ticker, metric, periodKind, p)}));
-}
-function msLatestPair(ticker, metric, periodKind){
-  const s = msSeriesFor(ticker, metric, periodKind).filter(x=>x.value!==null);
-  if (!s.length) return {latest:null, prev:null, period:null};
-  const latest = s[s.length-1];
-  const prev = s.length>1 ? s[s.length-2] : null;
-  return {latest: latest.value, prev: prev?prev.value:null, period: latest.period};
-}
-function msDeltaBadge(latest, prev){
-  if (latest===null || prev===null) return {cls:"flat", text:"—"};
-  const d = latest - prev;
-  const cls = Math.abs(d) < 0.05 ? "flat" : (d>0 ? "up" : "down");
-  const arrow = d>0?"▲":(d<0?"▼":"·");
-  return {cls, text: arrow+" "+fmtNum(Math.abs(d),2)+" đpt"};
+function makeSeries(name,color,data,right,stackId,comboUnit){
+  let type=state.type, areaStyle=null, stack=null;
+  if(state.type==='group'){ type='bar'; }
+  else if(state.type==='stack'){ type='bar'; stack=stackId||'s'; }
+  else if(state.type==='line'){ type='line'; }
+  else if(state.type==='area'){ type='line'; areaStyle={opacity:.18}; stack=stackId||'s'; }
+  else if(state.type==='combo'){ type = comboUnit==='pct' ? 'line' : 'bar'; }
+  const s={ name, type, data,
+    itemStyle:{color, borderRadius: type==='bar'?[3,3,0,0]:0},
+    lineStyle:{color,width:2}, symbol:'circle', symbolSize:6,
+    yAxisIndex: right?1:0, barMaxWidth:34 };
+  if(areaStyle) s.areaStyle={color,opacity:.16};
+  if(stack) s.stack=stack;
+  if(type==='line'){ s.itemStyle={color}; }
+  return s;
 }
 
-// same heat-color formula as bank dashboard's seasonColor(), but sequential (0..max)
-// instead of diverging around 0, since market share has no negative direction.
-function shareHeatColor(v, max){
-  if (v===null || v===undefined || isNaN(v) || !max) return "";
-  const a = Math.max(0, Math.min(1, v/max));
-  const alpha = (0.06 + a*0.55).toFixed(3);
-  return "background:rgba(79,111,82,"+alpha+")";
+function baseOpt(xData, series, dual, mets, sUnits){
+  const absMet = mets.find(m=>m.unit!=='pct'); const absU = absMet?absMet.unit:'bn';
+  const yLeft={ type:'value', name: dual?'giá trị':UNIT_LBL[mets[0].unit],
+    nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+    splitLine:{lineStyle:{color:'#EFE9DD'}},
+    axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,
+      formatter: v=> (dual||absU!=='pct') ? (absU==='x'?v.toFixed(1):fmtAxisBn(v)) : v+'%' } };
+  const yRight={ type:'value', name:'%', position:'right',
+    nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+    splitLine:{show:false}, axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,formatter:v=>v+'%'} };
+  const yAxis = dual ? [yLeft,yRight] : [yLeft];
+  const manyX = xData.length>8;
+  return {
+    textStyle:{fontFamily:'IBM Plex Sans'},
+    tooltip:{ trigger:'axis', backgroundColor:'#211C16', borderColor:'#211C16',
+      textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:12},
+      formatter:params=>{
+        let s=`<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`;
+        params.forEach(p=>{
+          const u = sUnits[p.seriesIndex]||'bn';
+          s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${p.marker}${p.seriesName}</span><b>${fmtVal(u,p.value)}</b></div>`;
+        });
+        return s;
+      } },
+    legend:{ type:'scroll', data:series.map(s=>s.name), bottom:0, icon:'roundRect',
+      textStyle:{fontFamily:'IBM Plex Mono',fontSize:11} },
+    grid:{ left:64, right: dual?56:24, top:22, bottom: series.length>1?52:34 },
+    xAxis:{ type:'category', data:xData,
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, rotate: manyX?38:0, interval: xData.length>24?'auto':0},
+      axisTick:{show:false}, axisLine:{lineStyle:{color:'#D8CFBE'}} },
+    yAxis, series
+  };
 }
-function msPct(v, digits){ return v===null||v===undefined||isNaN(v) ? "–" : fmtNum(v, digits===undefined?2:digits)+"%"; }
+function round(v){ return v==null?0:Math.round(v*100)/100; }
 
-function makeMsKpiCard(container, metric, label, ticker, periodKind){
-  const card = document.createElement("div");
-  card.className = "ovcard";
-  const {latest, prev, period} = msLatestPair(ticker, metric, periodKind);
-  const delta = msDeltaBadge(latest, prev);
-  card.innerHTML = `
-    <div class="period">${period||""}</div>
-    <div class="label">${label}</div>
-    <div class="value-row"><span class="value">${latest===null?"—":fmtNum(latest,2)}</span><span class="unit">${latest!==null?"%":""}</span></div>
-    <div class="delta ${delta.cls}">${delta.text}</div>
-  `;
-  container.appendChild(card);
+// kỳ gần nhất THỰC SỰ có số liệu — với chỉ tiêu dòng chảy, năm đang dở dang
+// (2026) bị loại khỏi dữ liệu năm nên không được lấy làm mốc, nếu không thẻ
+// thống kê sẽ hiển thị 0.
+function lastWithData(ps, hasData){
+  for(let i=ps.length-1;i>=0;i--){ if(hasData(ps[i])) return ps[i]; }
+  return ps[ps.length-1];
 }
 
-function renderMsTable(elId, metric, periodKind){
-  const periods = periodKind === "yearly" ? DATA.market_share.years : DATA.market_share.quarterly_periods;
-  const table = {};
-  let maxV = 0;
-  COMPANIES.forEach(t=>{
-    table[t] = {};
+function renderStatsCompare(cos, mets){
+  const m=mets[0]; const ps=rangeList();
+  const last=lastWithData(ps, p=>cos.some(c=>rawVal(c,m.id,p)!=null));
+  let h='';
+  const li=ps.indexOf(last);
+  cos.slice(0,8).forEach(b=>{
+    const v=val(b,m.id,last);
+    const prev=li>0?val(b,m.id,ps[li-1]):null;
+    let d='';
+    if(prev){ const ch=v-prev; const pc= prev!==0?(ch/Math.abs(prev)*100):null;
+      d = (ch>=0?'▲ ':'▼ ')+(pc!=null?Math.abs(pc).toFixed(1)+'% so kỳ trước':''); }
+    h+=`<div class="st"><div class="h"><span class="dot" style="width:9px;height:9px;border-radius:3px;background:${CO_COLOR[b]}"></span>${b}</div>
+        <div class="v">${fmtVal(m.unit,v)}</div><div class="d">${m.label} · ${last}<br>${d}</div></div>`;
+  });
+  $('#stats').innerHTML=h;
+}
+
+/* ---------- breakdown ---------- */
+const TD_GROUPS=['Danh mục tự doanh theo nhóm tài sản','Danh mục FVTPL theo loại tài sản',
+                 'Danh mục AFS theo loại tài sản','Danh mục HTM theo loại tài sản'];
+
+function renderBreak(){
+  $('#atWrap').classList.add('hide');
+  const co=state.bkCo, gi=+state.bkGroup, grp=DB.breakdowns[gi];
+  const comps=groupComponents(gi).filter(m=>{ const d=DB.data[co][m.id]; return d&&(d.y||d.q); });
+  const ps=rangeList();
+  renderTdCard(co, grp);
+  if(!comps.length){
+    $('#ctit').textContent=grp?grp.name:'—'; $('#csub').textContent=co;
+    $('#stats').innerHTML=''; $('#foot').textContent='Công ty này không có dữ liệu phân rã cho nhóm đã chọn.';
+    chart.clear();
+    chart.setOption({graphic:{type:'text',left:'center',top:'middle',style:{text:`${co} không có dữ liệu cho nhóm này`,fill:'#8C8276',font:'14px IBM Plex Sans'}}});
+    return;
+  }
+  const share=state.bkView==='share';
+  const totals=ps.map(p=>comps.reduce((s,m)=>s+Math.abs(val(co,m.id,p)),0));
+  const series=comps.map((m,i)=>{
+    const data=ps.map((p,pi)=>{
+      const v=val(co,m.id,p);
+      if(!share) return round(v);
+      return totals[pi] ? Math.round(v/totals[pi]*1000)/10 : 0;
+    });
+    const color=seriesColor(i);
+    const s={ name:m.label, type: state.type==='line'?'line':'bar', data,
+      itemStyle:{color, borderRadius: state.type==='line'?0:[3,3,0,0]},
+      lineStyle:{color,width:2}, symbol:'circle', symbolSize:6, barMaxWidth:44 };
+    if(state.type==='stack'||state.type==='area') s.stack='s';
+    if(state.type==='area'){ s.type='line'; s.areaStyle={color,opacity:.2}; }
+    return s;
+  });
+  const unit = share?'pct':comps[0].unit;
+  chart.setOption({
+    textStyle:{fontFamily:'IBM Plex Sans'},
+    tooltip:{trigger:'axis', backgroundColor:'#211C16', borderColor:'#211C16',
+      textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:12},
+      formatter:params=>{
+        let s=`<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`;
+        let tot=0;
+        params.forEach(p=>{ tot+=p.value||0;
+          s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${p.marker}${p.seriesName}</span><b>${fmtVal(unit,p.value)}</b></div>`; });
+        if(!share) s+=`<div style="border-top:1px solid #4A4237;margin-top:4px;padding-top:3px;display:flex;justify-content:space-between;gap:14px"><span>Tổng</span><b>${fmtVal(unit,tot)}</b></div>`;
+        return s;
+      }},
+    legend:{type:'scroll', bottom:0, icon:'roundRect', textStyle:{fontFamily:'IBM Plex Mono',fontSize:11}},
+    grid:{left:64, right:24, top:22, bottom:52},
+    xAxis:{type:'category', data:ps, axisTick:{show:false}, axisLine:{lineStyle:{color:'#D8CFBE'}},
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, rotate:ps.length>8?38:0}},
+    yAxis:{type:'value', name: share?'%':UNIT_LBL[unit],
+      nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+      max: share?100:null, splitLine:{lineStyle:{color:'#EFE9DD'}},
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, formatter:v=> share?v+'%':fmtAxisBn(v)}},
+    series
+  }, true);
+
+  $('#ctit').textContent=grp.name;
+  $('#csub').textContent=`${co} · ${state.bkView==='share'?'tỷ trọng %':'giá trị'} · ${ps[0]}–${ps[ps.length-1]}`;
+  $('#foot').innerHTML=`${comps.length} cấu phần. `
+    +(share?'Tỷ trọng tính trên tổng giá trị tuyệt đối các cấu phần trong cùng kỳ (dùng trị tuyệt đối để khoản lỗ không làm âm mẫu số). ':'')
+    +(state.gran==='y'?'Chỉ tiêu dòng chảy chỉ có số liệu năm khi đã đủ 4 quý. ':'')
+    +'Nguồn: FiinPro.';
+
+  const last=lastWithData(ps, p=>totals[ps.indexOf(p)]>0);
+  const li=ps.indexOf(last);
+  $('#stats').innerHTML=comps.slice(0,8).map((m,i)=>{
+    const v=val(co,m.id,last);
+    const tot=totals[li];
+    const sh=tot?(v/tot*100):null;
+    return `<div class="st"><div class="h"><span class="dot" style="width:9px;height:9px;border-radius:3px;background:${seriesColor(i)}"></span>${m.label}</div>
+      <div class="v">${fmtVal(m.unit,v)}</div><div class="d">${last}${sh!=null?' · '+sh.toFixed(1)+'% tổng nhóm':''}</div></div>`;
+  }).join('');
+}
+
+/* chi tiết từng mã cổ phiếu — chỉ có cho Q2/2026, hiện kèm các nhóm tự doanh */
+function renderTdCard(co, grp){
+  const card=$('#tdCard');
+  const detail = grp && TD_GROUPS.includes(grp.name) ? (DB.tu_doanh_detail||{})[co] : null;
+  if(!detail || !detail.items || !detail.items.length){ card.classList.add('hide'); return; }
+  card.classList.remove('hide');
+  const hasF=detail.items.some(it=>/FVTPL/.test(it.tag)), hasA=detail.items.some(it=>/AFS/.test(it.tag));
+  const catLabel = hasF&&hasA ? 'FVTPL + AFS' : (hasF?'FVTPL':'AFS');
+  $('#tdSub').textContent=`${co} · chi tiết từng khoản mục ${catLabel} theo giá trị hợp lý (tỷ VND) — quý ${detail.period}`;
+
+  // làm tròn theo phần dư lớn nhất: các dòng hiển thị luôn cộng đúng bằng dòng tổng
+  const denom=detail.denom_ty_vnd||0, rd=Math.round(denom);
+  const floors=detail.items.map(it=>Math.floor(it.value));
+  let rem=rd-floors.reduce((a,b)=>a+b,0);
+  const order=detail.items.map((it,i)=>({i,frac:it.value-floors[i]})).sort((a,b)=>b.frac-a.frac);
+  const dv=floors.slice();
+  for(let k=0;k<order.length&&rem>0;k++,rem--) dv[order[k].i]+=1;
+
+  const rows=detail.items.map((it,i)=>{
+    const pct=denom>0?(it.value/denom*100):null;
+    const nm=it.is_ticker?escHtml(it.label):`<span style="font-family:var(--sans);font-weight:500">${escHtml(it.label)}</span>`;
+    return `<tr><td class="hc-r">${i+1}.</td><td class="hc-l hc-t">${nm}<span class="badge">${escHtml(it.tag)}</span></td>`
+      +`<td class="hc-v">${dv[i].toLocaleString('vi-VN')}</td>`
+      +`<td class="hc-s">${pct==null?'–':pct.toFixed(1)+'%'}</td></tr>`;
+  }).join('');
+  $('#tdBody').innerHTML = rows
+    + `<tr class="holdtot"><td class="hc-r"></td><td class="hc-l">Tổng ${catLabel} (giá trị hợp lý)</td>`
+    + `<td class="hc-v">${rd.toLocaleString('vi-VN')}</td><td class="hc-s">100%</td></tr>`;
+  $('#tdFoot').innerHTML='Nguồn: Thuyết minh Báo cáo tài chính (PDF) quý Q2/2026 — không phải FiinPro. Chỉ có số liệu một quý, chưa so sánh được qua các quý. '
+    +'"Khác" là phần còn lại gộp theo thuyết minh gốc. Công ty không nêu đích danh từng mã thì chỉ hiện theo nhóm tài sản. '
+    +(detail.note?escHtml(detail.note)+' ':'')+'Đơn vị: tỷ VND.';
+}
+
+/* ---------- ranking ---------- */
+function buildRankControls(){
+  const opts=DB.metrics.filter(m=>hasAny(m.id))
+    .map(m=>`<option value="${m.id}">${m.label}</option>`).join('');
+  $('#rkMetric').innerHTML=opts;
+  const def=DB.metrics.find(m=>m.id==='total_assets')||DB.metrics[0];
+  if(def){ state.rkMetric=def.id; $('#rkMetric').value=def.id; }
+}
+
+function renderRank(){
+  const m=M_BY_ID[state.rkMetric];
+  if(!m){ $('#rankWrap').innerHTML='<div class="loading">Chọn chỉ tiêu để xếp hạng</div>'; return; }
+  const psAll=periodsAll();
+  const ps=psAll.slice(Math.max(0, state.to-state.rkN+1), state.to+1);
+  const isBn=m.unit==='bn';
+  let prevRank=null, cols='';
+  ps.forEach(p=>{
+    const rows=DB.meta.companies.map(c=>({b:c, v:rawVal(c,m.id,p)})).filter(r=>r.v!=null).sort((a,b)=>b.v-a.v);
+    const rk={}; rows.forEach((r,i)=>rk[r.b]=i+1);
+    if(!rows.length){ cols+=`<div class="rkcol"><h4>${p}</h4><table><tr><td class="rk-r"></td><td style="color:var(--muted)">không có số liệu</td></tr></table></div>`; prevRank=rk; return; }
+    const tot=rows.reduce((s,r)=>s+r.v,0);
+    const vs=rows.map(r=>r.v), mn=Math.min(...vs), mx=Math.max(...vs);
+    let body='';
+    rows.forEach((r,i)=>{
+      const a=mx>mn ? (r.v-mn)/(mx-mn) : .5;
+      const bg=`rgba(155,123,71,${(0.05+a*0.42).toFixed(3)})`;
+      let ch='<td class="rk-c eq">·</td>';
+      if(prevRank){
+        if(!(r.b in prevRank)) ch='<td class="rk-c eq">mới</td>';
+        else { const d=prevRank[r.b]-(i+1);
+          ch = d>0?`<td class="rk-c up">▲${d}</td>` : d<0?`<td class="rk-c dn">▼${-d}</td>` : '<td class="rk-c eq">·</td>'; }
+      }
+      body+=`<tr><td class="rk-r">${i+1}.</td><td class="rk-b"><span style="background:${CO_COLOR[r.b]}">${r.b}</span></td>`
+        +`<td class="rk-v" style="background:${bg}">${fmtVal(m.unit,r.v)}</td>`
+        +(isBn?`<td class="rk-s">${tot?(r.v/tot*100).toFixed(1)+'%':'–'}</td>`:'')
+        +ch+'</tr>';
+    });
+    if(isBn) body+=`<tr class="rktot"><td class="rk-r"></td><td class="rk-b">Tổng</td><td class="rk-v">${fmtBn(tot)}</td><td class="rk-s">100%</td><td></td></tr>`;
+    cols+=`<div class="rkcol"><h4><span>${p}</span><span>${rows.length} CT</span></h4><table>${body}</table></div>`;
+    prevRank=rk;
+  });
+  $('#rankWrap').innerHTML=`<div class="rkgrid">${cols}</div>`;
+  $('#ctit').textContent='Xếp hạng · '+m.label;
+  $('#csub').textContent=`${ps.length} kỳ ${state.gran==='y'?'năm':'quý'} gần nhất đến ${ps[ps.length-1]} · đơn vị: ${UNIT_LBL[m.unit]}`;
+  $('#foot').innerHTML='Nền vàng đậm dần theo độ lớn trong kỳ. ▲▼ = thay đổi thứ hạng so với kỳ liền trước.'
+    +(isBn?' Cột % = tỷ trọng trên tổng 13 công ty có số liệu trong kỳ (không phải toàn ngành).':'')
+    +' Công ty thiếu số liệu kỳ nào sẽ không xuất hiện trong kỳ đó. Nguồn: FiinPro.';
+  $('#stats').innerHTML='';
+}
+
+/* ---------- market share ---------- */
+function shareHeatColor(v,max){
+  if(v==null||isNaN(v)||!max) return '';
+  const a=Math.max(0,Math.min(1,v/max));
+  return `background:rgba(79,111,82,${(0.06+a*0.55).toFixed(3)})`;
+}
+function shareTable(metricKey, periods, gran){
+  const cos=DB.meta.companies;
+  const suffix = gran==='y' ? '_yearly' : '';
+  const tbl={}; let mx=0;
+  cos.forEach(c=>{
+    tbl[c]={};
     periods.forEach(p=>{
-      const v = msValueFor(t, metric, periodKind, p);
-      table[t][p] = v;
-      if (v!==null && v>maxV) maxV = v;
+      const d=(DB.data[c]&&DB.data[c][metricKey]);
+      let v=null;
+      if(gran==='y'){ v = d&&d.y ? (d.y[p]==null?null:d.y[p]) : null; }
+      else { v = d&&d.q ? (d.q[p]==null?null:d.q[p]) : null; }
+      tbl[c][p]=v; if(v!=null&&v>mx) mx=v;
     });
   });
-  const selIdx = COMPANIES.indexOf(state.company);
-  const thead = "<thead><tr><th>Kỳ</th>"
-    + COMPANIES.map((t,i)=>`<th${i===selIdx?' class="mssel"':''}>${t}</th>`).join("")
-    + "<th>Tổng 13 CT</th></tr></thead>";
-  let body = "<tbody>";
+  const sel=state.shareHi;
+  let h='<thead><tr><th>Kỳ</th>'+cos.map(c=>`<th${c===sel?' class="mssel"':''}>${c}</th>`).join('')+'<th>Tổng 13 CT</th></tr></thead><tbody>';
   periods.forEach(p=>{
-    let rowSum = 0, any = false;
-    const cells = COMPANIES.map((t,i)=>{
-      const v = table[t][p];
-      if (v!==null){ rowSum += v; any = true; }
-      return `<td${i===selIdx?' class="mssel"':''} style="${shareHeatColor(v,maxV)}">${msPct(v)}</td>`;
-    }).join("");
-    body += `<tr><td class="syr">${p}</td>${cells}<td class="savg">${any?msPct(rowSum,1):"–"}</td></tr>`;
+    let sum=0, any=false;
+    const cells=cos.map(c=>{
+      const v=tbl[c][p];
+      if(v!=null){ sum+=v; any=true; }
+      return `<td${c===sel?' class="mssel"':''} style="${shareHeatColor(v,mx)}">${v==null?'–':v.toFixed(2)+'%'}</td>`;
+    }).join('');
+    h+=`<tr><td class="syr">${p}</td>${cells}<td class="savg">${any?sum.toFixed(1)+'%':'–'}</td></tr>`;
   });
-  body += "</tbody>";
-  document.getElementById(elId).innerHTML = thead + body;
+  return h+'</tbody>';
+}
+function renderShare(){
+  const gran=state.shareGran;
+  const ms=DB.market_share||{};
+  // trục kỳ của thị phần độc lập với khoảng thời gian chung (nguồn chỉ có từ 2020)
+  const periods = gran==='y' ? (ms.years||[]) : (ms.quarterly_periods||[]);
+  if(!periods.length){ $('#shareWrap').innerHTML='<div class="loading">Không có dữ liệu thị phần</div>'; return; }
+  $('#shareWrap').innerHTML =
+     `<div class="seasonsec">Thị phần dư nợ cho vay margin</div>`
+    +`<div class="seasonwrap-scroll"><table class="seasontable">${shareTable('margin_share_pct',periods,gran)}</table></div>`
+    +`<div class="seasonsec">Thị phần môi giới (giá trị giao dịch NĐT)</div>`
+    +`<div class="seasonwrap-scroll"><table class="seasontable">${shareTable('brokerage_share_pct',periods,gran)}</table></div>`;
+  $('#ctit').textContent='Thị phần ngành · 13 công ty';
+  $('#csub').textContent=`${gran==='y'?'theo năm':'theo quý'} · ${periods[0]}–${periods[periods.length-1]} · mẫu số = tổng ~88 CTCK toàn ngành`;
+  const meth=ms.methodology||{}, notes=ms.notes||{};
+  $('#foot').innerHTML='Nguồn: '+escHtml(ms.source||'FiinProX')+'. Mẫu số ("toàn ngành") là tổng của toàn bộ ~88 công ty chứng khoán có báo cáo trên FiinPro (HOSE+HNX+UPCoM), không chỉ 13 công ty trong dashboard. '
+    +escHtml(meth.brokerage_yearly||'')+' '+escHtml(meth.margin_yearly||'')+' '+escHtml(notes.VCI||'')
+    +' Lưu ý thêm: VND quý Q3/2020 và VCK giai đoạn 2023–2024 có giá trị cao bất thường so với các kỳ liền kề trong file nguồn FiinPro — cần đối chiếu thêm, không phải lỗi tính của bảng này.'
+    +' "Tổng 13 CT" = tổng thị phần 13 công ty trong dashboard (phần còn lại thuộc ~75 công ty khác).';
+  $('#stats').innerHTML='';
 }
 
-function renderMarketShare(){
-  const periodKind = msState.period;
-  const ticker = state.company;
-  const kpiEl = document.getElementById("msCompanyKpis");
-  kpiEl.innerHTML = "";
-  makeMsKpiCard(kpiEl, "margin_share_pct", "Thị phần dư nợ margin ("+ticker+")", ticker, periodKind);
-  makeMsKpiCard(kpiEl, "brokerage_share_pct", "Thị phần môi giới ("+ticker+")", ticker, periodKind);
-  renderMsTable("msMarginTable", "margin_share_pct", periodKind);
-  renderMsTable("msBrokerTable", "brokerage_share_pct", periodKind);
-  const ms = DATA.market_share;
-  if (ms){
-    document.getElementById("msFootnote").innerHTML =
-      "Nguồn: "+escHtml(ms.source)+". Mẫu số (\"toàn ngành\") là tổng của toàn bộ ~88 công ty chứng khoán có báo cáo trên FiinPro (HOSE+HNX+UPCoM), không chỉ 13 công ty trong dashboard. "
-      + escHtml(ms.methodology.brokerage_yearly)+" "
-      + escHtml(ms.methodology.margin_yearly)+" "
-      + escHtml(ms.notes.VCI)+" "
-      + "Lưu ý thêm: VND quý Q3/2020 và VCK giai đoạn 2023–2024 có giá trị cao bất thường so với các kỳ liền kề trong file nguồn FiinPro — cần đối chiếu thêm, không phải lỗi tính của bảng này. "
-      + "\"Tổng 13 CT\" = tổng thị phần của 13 công ty trong dashboard (phần còn lại thuộc ~75 công ty khác trong ngành). Đơn vị: % thị phần.";
-  }
+/* ---------- valuation ---------- */
+const VAL_BAND={ mean:'#9B7B47', median:'#9A9182', upper:'#C6A34E', lower:'#6E9BB3' };
+const VAL_LINE='#3C5A6E';
+function fmtXv(v){ return v==null||isNaN(v)?'–':(Math.round(v*100)/100).toFixed(2)+'x'; }
+function valMetricLabel(k){ const m=(DB.valuation.meta.metrics||[]).find(x=>x.key===k); return m?m.label:k; }
+function valUnitOf(k){ return k==='PB'?'P/B':'P/E'; }
+function buildValControls(){
+  $('#valCo').innerHTML=DB.meta.companies.map(c=>`<option>${c}</option>`).join('');
+  $('#valHi').innerHTML=DB.meta.companies.map(c=>`<option>${c}</option>`).join('');
+  state.valCo=DB.meta.companies[0]; state.valHi=DB.meta.companies[0];
 }
-
-function setupMarketShareControls(){
-  document.querySelectorAll("#msPeriodSeg button").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll("#msPeriodSeg button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on");
-      msState.period = b.dataset.period;
-      renderMarketShare();
-    };
-  });
-}
-
-// ---------- valuation tab (P/B, P/E lịch sử + dải Mean/Median/±1σ) ----------
-const VAL_BAND = { mean:"#9B7B47", median:"#9A9182", upper:"#C6A34E", lower:"#6E9BB3" };
-let valState = { view:"company", metric:"PB", bands:true, indStat:"mean" };
-
-function fmtXv(v){ return v===null||v===undefined||isNaN(v) ? "–" : (Math.round(v*100)/100).toFixed(2)+"x"; }
-function valMetricLabel(mk){ const m = DATA.valuation.meta.metrics.find(x=>x.key===mk); return m?m.label:mk; }
-function valUnitOf(mk){ return mk==="PB" ? "P/B" : "P/E"; }
-
-function valSeriesData(ticker, mk){
-  const dates = DATA.valuation.dates;
-  const vals = DATA.valuation.companies[ticker].metrics[mk].values;
-  const out = [];
-  for (let i=0;i<vals.length;i++){ if (vals[i]!==null) out.push([dates[i], vals[i]]); }
+function valSeriesData(co,mk){
+  const e=DB.valuation.companies[co]; if(!e) return [];
+  const vals=e.metrics[mk].values, dts=DB.valuation.dates, out=[];
+  for(let i=0;i<vals.length;i++){ if(vals[i]!=null) out.push([dts[i], vals[i]]); }
   return out;
 }
-
-function valBaseOption(series){
+function valBaseOpt(series){
   return {
-    animation:false,
-    textStyle:{fontFamily:"IBM Plex Sans"},
-    tooltip:{trigger:"axis", confine:true, formatter:function(ps){
-      const pts = ps.filter(p=>p.value && p.value[1]!==null && p.value[1]!==undefined);
-      if (!pts.length) return "";
-      let out = "<div style='font-weight:600;margin-bottom:4px'>"+pts[0].axisValueLabel+"</div>";
-      pts.slice().sort((a,b)=>b.value[1]-a.value[1]).slice(0,14).forEach(p=>{
-        out += "<div style='display:flex;justify-content:space-between;gap:14px'><span>"+p.marker+p.seriesName+"</span><b>"+fmtXv(p.value[1])+"</b></div>";
-      });
-      return out;
-    }},
-    legend:{bottom:0, type:"scroll", textStyle:LEGEND_TEXT},
-    grid:{left:52, right:74, top:20, bottom:76},
-    xAxis:{type:"time", axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
-    yAxis:{type:"value", scale:true, name:"Lần", nameTextStyle:AXIS_TEXT, axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
-    dataZoom:[{type:"inside"}, {type:"slider", height:18, bottom:34, borderColor:CC.grid,
-      fillerColor:"rgba(155,123,71,.12)", handleStyle:{color:CC.spark}, textStyle:AXIS_TEXT}],
+    textStyle:{fontFamily:'IBM Plex Sans'},
+    tooltip:{trigger:'axis', backgroundColor:'#211C16', borderColor:'#211C16', confine:true,
+      textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:12},
+      formatter:params=>{
+        const ps=params.filter(p=>p.value&&p.value[1]!=null);
+        if(!ps.length) return '';
+        let s=`<div style="font-weight:600;margin-bottom:4px">${ps[0].axisValueLabel}</div>`;
+        ps.sort((a,b)=>b.value[1]-a.value[1]);
+        ps.slice(0,14).forEach(p=>{ s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${p.marker}${p.seriesName}</span><b>${fmtXv(p.value[1])}</b></div>`; });
+        if(ps.length>14) s+=`<div style="color:#B89A66;margin-top:2px">… +${ps.length-14} nữa</div>`;
+        return s;
+      }},
+    grid:{left:52, right:112, top:20, bottom:78},
+    xAxis:{type:'time', axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,color:'#8C8276'},
+      axisLine:{lineStyle:{color:'#D8CFBE'}}, axisTick:{show:false}},
+    yAxis:{type:'value', scale:true, name:'Lần',
+      nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+      splitLine:{lineStyle:{color:'#EFE9DD'}},
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,formatter:v=>v.toFixed(1)}},
+    dataZoom:[{type:'inside'},{type:'slider',height:20,bottom:36,borderColor:'#D8CFBE',
+      fillerColor:'rgba(155,123,71,.12)', handleStyle:{color:'#9B7B47'}, moveHandleStyle:{color:'#9B7B47'},
+      textStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+      dataBackground:{lineStyle:{color:'#D8CFBE'},areaStyle:{color:'#EFE9DD'}},
+      selectedDataBackground:{lineStyle:{color:'#B89A66'},areaStyle:{color:'#E6D9BF'}}}],
+    legend:{type:'scroll', bottom:2, icon:'roundRect', textStyle:{fontFamily:'IBM Plex Mono',fontSize:11},
+      data:series.map(s=>s.name)},
     series
   };
 }
-
-function stCard(h, v, d, color){
-  const dot = color ? "<span style='display:inline-block;width:9px;height:9px;border-radius:3px;background:"+color+"'></span>" : "";
-  return "<div class='st'><div class='h'>"+dot+h+"</div><div class='v'>"+v+"</div><div class='d'>"+(d||"")+"</div></div>";
+function renderVal(){
+  const isCo=state.valView==='co';
+  $('#valCoWrap').classList.toggle('hide',!isCo);
+  $('#valBandsWrap').classList.toggle('hide',!isCo);
+  $('#valIndWrap').classList.toggle('hide',isCo);
+  $('#valHiWrap').classList.toggle('hide',isCo);
+  isCo?renderValCo():renderValInd();
 }
-
-function renderValStats(mk, last, stats){
-  const statsEl = document.getElementById("valStats");
-  if (!stats){ statsEl.innerHTML = ""; return; }
-  const cur = last ? last[1] : null;
-  const z = (cur!==null && stats.std) ? (cur-stats.mean)/stats.std : null;
-  let pos = "—";
-  if (cur!==null){
-    if (cur>stats.upper) pos = "Trên +1σ (đắt)";
-    else if (cur<stats.lower) pos = "Dưới −1σ (rẻ)";
-    else if (cur>=stats.mean) pos = "Trên trung bình";
-    else pos = "Dưới trung bình";
+function stCard(h,v,d,c){ return `<div class="st"><div class="h">${c?`<span class="dot" style="width:9px;height:9px;border-radius:3px;background:${c}"></span>`:''}${h}</div><div class="v">${v}</div><div class="d">${d||''}</div></div>`; }
+function renderValCo(){
+  const co=state.valCo, mk=state.valMetric, e=DB.valuation.companies[co];
+  if(!e){ chart.clear(); return; }
+  const data=valSeriesData(co,mk), stats=e.metrics[mk].stats;
+  const series=[{ name:co+' · '+valUnitOf(mk), type:'line', showSymbol:false, data,
+    lineStyle:{color:VAL_LINE,width:1.6}, itemStyle:{color:VAL_LINE}, connectNulls:true, z:3 }];
+  if(state.valBands && stats){
+    const ml=(n,c,v,dash)=>({yAxis:v, lineStyle:{color:c,width:1.4,type:dash?'dashed':'solid'},
+      label:{formatter:n+' '+(Math.round(v*100)/100).toFixed(2), color:c, fontFamily:'IBM Plex Mono',
+        fontSize:10, position:'end', backgroundColor:'rgba(255,255,255,.75)', padding:[1,2]}});
+    series[0].markLine={ symbol:'none', silent:true, animation:false, precision:2, data:[
+      ml('Mean',VAL_BAND.mean,stats.mean,false),
+      ml('Median',VAL_BAND.median,stats.median,true),
+      ml('Mean +1σ',VAL_BAND.upper,stats.upper,false),
+      ml('Mean −1σ',VAL_BAND.lower,stats.lower,false) ]};
   }
-  statsEl.innerHTML = [
-    stCard("Hiện tại", fmtXv(cur), (last?last[0]:"")+(z!==null?" · z="+z.toFixed(2):""), CC.spark),
-    stCard("Mean", fmtXv(stats.mean), "n="+stats.n+" phiên", VAL_BAND.mean),
-    stCard("Median", fmtXv(stats.median), "trung vị lịch sử", VAL_BAND.median),
-    stCard("Mean +1σ", fmtXv(stats.upper), "σ="+fmtNum(stats.std,2), VAL_BAND.upper),
-    stCard("Mean −1σ", fmtXv(stats.lower), "", VAL_BAND.lower),
-    stCard("Vị thế", pos, "so với lịch sử", null),
-  ].join("");
-}
-
-function renderValCompany(){
-  const ticker = state.company, mk = valState.metric;
-  const entry = DATA.valuation.companies[ticker];
-  const data = valSeriesData(ticker, mk);
-  const stats = entry.metrics[mk].stats;
-  const series = [{name: ticker+" · "+valUnitOf(mk), type:"line", showSymbol:false, data,
-    lineStyle:{color:CC.spark, width:1.6}, itemStyle:{color:CC.spark}, connectNulls:true, z:3}];
-  if (valState.bands && stats){
-    const ml = (name,color,val,dash) => ({yAxis:val, lineStyle:{color,width:1.4,type:dash?"dashed":"solid"},
-      label:{formatter:name+" "+fmtXv(val), color, fontFamily:"IBM Plex Mono", fontSize:10, position:"end",
-        backgroundColor:"rgba(255,255,255,.75)", padding:[1,2]}});
-    series[0].markLine = {symbol:"none", silent:true, animation:false, data:[
-      ml("Mean", VAL_BAND.mean, stats.mean, false),
-      ml("Median", VAL_BAND.median, stats.median, true),
-      ml("Mean +1σ", VAL_BAND.upper, stats.upper, false),
-      ml("Mean −1σ", VAL_BAND.lower, stats.lower, false),
-    ]};
+  chart.setOption(valBaseOpt(series), true);
+  $('#ctit').textContent=`${co} · ${valMetricLabel(mk)}`;
+  const last=data.length?data[data.length-1]:null;
+  $('#csub').textContent=`Từ ${e.listing_date} · ${data.length} phiên · đơn vị: Lần`;
+  $('#foot').innerHTML='Bốn đường ngang = Mean / Median / Mean ±1σ trên toàn bộ lịch sử niêm yết. '
+    +(mk!=='PB'?'P/E ≤ 0 hoặc &gt; 100 (không ý nghĩa) đã được loại khỏi cả đường giá và thống kê. '
+              :'Giá trị P/B = 0 (giai đoạn chưa niêm yết) đã được loại. ')+'Nguồn: FiinPro.';
+  if(!stats){ $('#stats').innerHTML=''; return; }
+  const cur=last?last[1]:null;
+  const z=(cur!=null&&stats.std)?(cur-stats.mean)/stats.std:null;
+  let pos='—';
+  if(cur!=null){
+    if(cur>stats.upper) pos='Trên +1σ (đắt)';
+    else if(cur<stats.lower) pos='Dưới −1σ (rẻ)';
+    else if(cur>=stats.mean) pos='Trên trung bình';
+    else pos='Dưới trung bình';
   }
-  const c = getChart("valChart");
-  c.setOption(valBaseOption(series), true);
-  document.getElementById("valTitle").textContent = ticker+" · "+valMetricLabel(mk);
-  const last = data.length ? data[data.length-1] : null;
-  document.getElementById("valSub").textContent = "Từ "+(entry.listing_date||"—")+" · "+data.length+" phiên · đơn vị: Lần";
-  document.getElementById("valFoot").innerHTML =
-    "Bốn đường ngang = Mean / Median / Mean ±1σ trên toàn bộ lịch sử. "
-    + (mk!=="PB" ? "P/E ≤ 0 hoặc &gt; 100 (không ý nghĩa) đã được loại khỏi cả đường giá và thống kê. " : "Giá trị P/B = 0 (giai đoạn chưa niêm yết) đã được loại khỏi đường giá và thống kê. ")
-    + "Nguồn: "+escHtml(DATA.valuation.meta.source)+".";
-  renderValStats(mk, last, stats);
+  $('#stats').innerHTML=[
+    stCard('Hiện tại', fmtXv(cur), (last?last[0]:'')+(z!=null?` · z=${z.toFixed(2)}`:''), VAL_LINE),
+    stCard('Mean', fmtXv(stats.mean), `n=${stats.n} phiên`, VAL_BAND.mean),
+    stCard('Median', fmtXv(stats.median), 'trung vị lịch sử', VAL_BAND.median),
+    stCard('Mean +1σ', fmtXv(stats.upper), `σ=${(Math.round(stats.std*100)/100).toFixed(2)}`, VAL_BAND.upper),
+    stCard('Mean −1σ', fmtXv(stats.lower), '', VAL_BAND.lower),
+    stCard('Vị thế', pos, 'so với lịch sử', '#211C16')
+  ].join('');
 }
-
-function renderValIndustry(){
-  const mk = valState.metric, stat = valState.indStat, hi = state.company;
-  const series = COMPANIES.map((t,i)=>{
-    const isHi = t===hi;
-    const s = {name:t, type:"line", showSymbol:false, data:valSeriesData(t, mk), connectNulls:true,
-      z:isHi?8:2, emphasis:{focus:"series"}};
-    if (isHi){
-      s.lineStyle = {color:PALETTE[i%PALETTE.length], width:3};
-      s.itemStyle = {color:PALETTE[i%PALETTE.length]};
-      s.endLabel = {show:true, formatter:p=>t+"  "+fmtXv(p.value[1]), color:PALETTE[i%PALETTE.length],
-        fontFamily:"IBM Plex Mono", fontSize:11, fontWeight:600, backgroundColor:"rgba(255,255,255,.8)", padding:[2,4], distance:6};
-      s.labelLayout = {moveOverlap:"shiftY"};
-    } else {
-      s.lineStyle = {color:"#C9C0B0", width:.9, opacity:.5};
-      s.itemStyle = {color:"#C9C0B0"};
-    }
+function renderValInd(){
+  const mk=state.valMetric, stat=state.valIndStat, hi=state.valHi;
+  const cos=DB.meta.companies;
+  const series=cos.map(b=>{
+    const isHi=hi&&b===hi;
+    const s={ name:b, type:'line', showSymbol:false, data:valSeriesData(b,mk),
+      connectNulls:true, z:isHi?8:2, emphasis:{focus:'series'} };
+    if(isHi){
+      s.lineStyle={color:CO_COLOR[b], width:3}; s.itemStyle={color:CO_COLOR[b]};
+      s.endLabel={show:true, formatter:p=>`${b}  ${fmtXv(p.value[1])}`,
+        color:CO_COLOR[b], fontFamily:'IBM Plex Mono', fontSize:11, fontWeight:600,
+        backgroundColor:'rgba(255,255,255,.78)', padding:[2,4], distance:6};
+      s.labelLayout={moveOverlap:'shiftY'};
+    } else { s.lineStyle={color:'#C9C0B0', width:.9, opacity:.5}; s.itemStyle={color:'#C9C0B0'}; }
     return s;
   });
-  const dates = DATA.valuation.dates;
-  const indArr = DATA.valuation.industry[mk][stat];
-  const indData = [];
-  for (let i=0;i<dates.length;i++){ if (indArr[i]!==null) indData.push([dates[i], indArr[i]]); }
-  series.push({name:"BÌNH QUÂN NGÀNH", type:"line", showSymbol:false, data:indData,
-    lineStyle:{color:"#211C16", width:3, type:"dashed"}, itemStyle:{color:"#211C16"}, connectNulls:true, z:12,
-    endLabel:{show:true, formatter:p=>"Ngành  "+fmtXv(p.value[1]), color:"#211C16",
-      fontFamily:"IBM Plex Mono", fontSize:11, fontWeight:600, backgroundColor:"rgba(255,255,255,.8)", padding:[2,4], distance:6},
-    labelLayout:{moveOverlap:"shiftY"}});
-  const opt = valBaseOption(series);
-  opt.grid.right = 108;
-  opt.legend.data = [hi, "BÌNH QUÂN NGÀNH"];
-  opt.tooltip.formatter = function(params){
-    const pHi = params.find(p=>p.seriesName===hi && p.value && p.value[1]!==null);
-    const pInd = params.find(p=>p.seriesName==="BÌNH QUÂN NGÀNH" && p.value && p.value[1]!==null);
-    if (!pHi && !pInd) return "";
-    let out = "<div style='font-weight:600;margin-bottom:4px'>"+(pHi||pInd).axisValueLabel+"</div>";
-    if (pHi) out += "<div style='display:flex;justify-content:space-between;gap:14px'><span>"+pHi.marker+hi+"</span><b>"+fmtXv(pHi.value[1])+"</b></div>";
-    if (pInd) out += "<div style='display:flex;justify-content:space-between;gap:14px'><span>"+pInd.marker+"Bình quân ngành</span><b>"+fmtXv(pInd.value[1])+"</b></div>";
-    if (pHi && pInd){ const d = pHi.value[1]-pInd.value[1];
-      out += "<div style='border-top:1px solid #4A4237;margin-top:4px;padding-top:3px;display:flex;justify-content:space-between;gap:14px'><span>Chênh lệch</span><b>"
-        + (d>=0?"+":"")+fmtNum(d,2)+" ("+(d>=0?"cao hơn":"thấp hơn")+" ngành)</b></div>";
-    }
-    return out;
+  const dts=DB.valuation.dates, ind=DB.valuation.industry[mk][stat], indData=[];
+  for(let i=0;i<dts.length;i++){ if(ind[i]!=null) indData.push([dts[i],ind[i]]); }
+  series.push({ name:'BÌNH QUÂN NGÀNH', type:'line', showSymbol:false, data:indData,
+    lineStyle:{color:'#211C16',width:3,type:'dashed'}, itemStyle:{color:'#211C16'}, connectNulls:true, z:12,
+    endLabel:{show:true, formatter:p=>`Ngành  ${fmtXv(p.value[1])}`, color:'#211C16',
+      fontFamily:'IBM Plex Mono', fontSize:11, fontWeight:600,
+      backgroundColor:'rgba(255,255,255,.78)', padding:[2,4], distance:6},
+    labelLayout:{moveOverlap:'shiftY'} });
+  const opt=valBaseOpt(series);
+  opt.legend.data=[hi,'BÌNH QUÂN NGÀNH'];
+  opt.tooltip.formatter=params=>{
+    const pHi=params.find(p=>p.seriesName===hi&&p.value&&p.value[1]!=null);
+    const pInd=params.find(p=>p.seriesName==='BÌNH QUÂN NGÀNH'&&p.value&&p.value[1]!=null);
+    if(!pHi&&!pInd) return '';
+    let s=`<div style="font-weight:600;margin-bottom:4px">${(pHi||pInd).axisValueLabel}</div>`;
+    if(pHi) s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${pHi.marker}${hi}</span><b>${fmtXv(pHi.value[1])}</b></div>`;
+    if(pInd) s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${pInd.marker}Bình quân ngành</span><b>${fmtXv(pInd.value[1])}</b></div>`;
+    if(pHi&&pInd){ const d=pHi.value[1]-pInd.value[1];
+      s+=`<div style="border-top:1px solid #4A4237;margin-top:4px;padding-top:3px;display:flex;justify-content:space-between;gap:14px"><span>Chênh lệch</span><b>${(d>=0?'+':'')+(Math.round(d*100)/100).toFixed(2)} (${d>=0?'cao hơn':'thấp hơn'} ngành)</b></div>`; }
+    return s;
   };
-  const c = getChart("valChart");
-  c.setOption(opt, true);
-  document.getElementById("valTitle").textContent = hi+" so với toàn ngành · "+valMetricLabel(mk);
-  document.getElementById("valSub").textContent = COMPANIES.length+" công ty · đường nét đứt đậm = bình quân ngành ("+(stat==="mean"?"trung bình":"trung vị")+") · đơn vị: Lần";
-  document.getElementById("valFoot").innerHTML =
-    "<b>"+hi+"</b> (chọn ở thanh chip phía trên) được tô đậm; các công ty khác chuyển màu xám làm nền so sánh. "
-    + "Nằm <b>trên</b> đường bình quân ngành = định giá cao hơn mặt bằng ngành; nằm <b>dưới</b> = thấp hơn mặt bằng ngành. "
-    + (mk!=="PB" ? "P/E ≤ 0 hoặc &gt; 100 đã loại khỏi biểu đồ và tính bình quân. " : "")
-    + "Nguồn: "+escHtml(DATA.valuation.meta.source)+".";
-  document.getElementById("valStats").innerHTML = "";
+  chart.setOption(opt, true);
+  $('#ctit').textContent=`${hi} so với toàn ngành · ${valMetricLabel(mk)}`;
+  $('#csub').textContent=`${cos.length} công ty · đường nét đứt đậm = bình quân ngành (${stat==='mean'?'trung bình':'trung vị'}) · đơn vị: Lần`;
+  $('#foot').innerHTML=`<b>${hi}</b> được tô đậm; các công ty khác chuyển màu xám làm nền so sánh. `
+    +'Nằm <b>trên</b> đường bình quân ngành = định giá cao hơn mặt bằng ngành; nằm <b>dưới</b> = thấp hơn mặt bằng ngành. '
+    +(mk!=='PB'?'P/E ≤ 0 hoặc &gt; 100 đã loại. ':'')+'Nguồn: FiinPro.';
+  $('#stats').innerHTML='';
 }
 
-function renderValuation(){
-  document.getElementById("valBandsWrap").classList.toggle("hide", valState.view==="industry");
-  document.getElementById("valIndStatWrap").classList.toggle("hide", valState.view==="company");
-  if (valState.view==="company") renderValCompany(); else renderValIndustry();
+/* ---------- seasonality ---------- */
+const MONTH_LBL=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+function buildSeasonControls(){
+  $('#seasonCo').innerHTML=DB.meta.companies.map(c=>`<option>${c}</option>`).join('');
+  state.seasonCo=DB.meta.companies[0];
 }
-
-function setupValuationControls(){
-  document.querySelectorAll("#valViewSeg button").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll("#valViewSeg button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on"); valState.view = b.dataset.view; renderValuation();
-    };
-  });
-  document.querySelectorAll("#valMetricSeg button").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll("#valMetricSeg button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on"); valState.metric = b.dataset.metric; renderValuation();
-    };
-  });
-  document.querySelectorAll("#valBandsSeg button").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll("#valBandsSeg button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on"); valState.bands = b.dataset.bands==="1"; renderValuation();
-    };
-  });
-  document.querySelectorAll("#valIndStatSeg button").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll("#valIndStatSeg button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on"); valState.indStat = b.dataset.stat; renderValuation();
-    };
-  });
+function seasonSeries(){
+  const sd=DB.seasonality||{};
+  return state.seasonView==='ind' ? (sd.industry||{}) : ((sd.companies||{})[state.seasonCo]||{});
 }
-
-// ---------- seasonality tab (Mùa vụ) ----------
-const MONTH_LBL = ["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"];
-let seasonState = { view:"company", from:null, to:null };
-
-function seasonSeriesFor(){
-  if (seasonState.view === "industry") return DATA.seasonality.industry;
-  return DATA.seasonality.companies[state.company] || {};
+function seasonColor(v,center,scale){
+  if(v==null||isNaN(v)) return '';
+  const d=v-center, a=Math.max(0,Math.min(1,Math.abs(d)/(scale||1)));
+  const alpha=(0.08+a*0.55).toFixed(3);
+  return d>=0 ? `background:rgba(79,111,82,${alpha})` : `background:rgba(140,59,59,${alpha})`;
 }
-function seasonColor(v, center, scale){
-  if (v===null||v===undefined||isNaN(v)) return "";
-  const d = v-center, a = Math.max(0, Math.min(1, Math.abs(d)/(scale||1)));
-  const alpha = (0.08+a*0.55).toFixed(3);
-  return d>=0 ? "background:rgba(79,111,82,"+alpha+")" : "background:rgba(140,59,59,"+alpha+")";
-}
-function seasonPct(v, digits){ return v===null||v===undefined||isNaN(v) ? "–" : v.toFixed(digits)+"%"; }
-
+function seasonPct(v,digits){ return v==null||isNaN(v) ? '–' : v.toFixed(digits)+'%'; }
 function renderSeason(){
-  const series = seasonSeriesFor();
-  const years = Object.keys(series).map(Number).sort((a,b)=>a-b);
-  if (!years.length){
-    document.getElementById("seasonWrap").innerHTML = "<p class='note'>Chưa có dữ liệu.</p>";
-    return;
-  }
-  if (seasonState.from===null || !years.includes(seasonState.from)) seasonState.from = years[0];
-  if (seasonState.to===null || !years.includes(seasonState.to)) seasonState.to = years[years.length-1];
-  const yrOptHtml = years.map(y=>"<option value='"+y+"'>"+y+"</option>").join("");
-  const fromEl = document.getElementById("seasonFrom"), toEl = document.getElementById("seasonTo");
-  fromEl.innerHTML = yrOptHtml; fromEl.value = seasonState.from;
-  toEl.innerHTML = yrOptHtml; toEl.value = seasonState.to;
+  const series=seasonSeries();
+  const years=Object.keys(series).map(Number).sort((a,b)=>a-b);
+  if(!years.length){ $('#seasonWrap').innerHTML='<div class="loading">Không có dữ liệu</div>'; return; }
+  if(state.seasonFrom==null||!years.includes(state.seasonFrom)) state.seasonFrom=years[0];
+  if(state.seasonTo==null||!years.includes(state.seasonTo)) state.seasonTo=years[years.length-1];
+  const yrOptHtml=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  $('#seasonFrom').innerHTML=yrOptHtml; $('#seasonFrom').value=state.seasonFrom;
+  $('#seasonTo').innerHTML=yrOptHtml; $('#seasonTo').value=state.seasonTo;
 
-  let allVals = [];
-  years.forEach(y=>{ (series[y]||[]).forEach(v=>{ if (v!==null) allVals.push(v); }); });
+  let allVals=[];
+  years.forEach(y=>{ (series[y]||[]).forEach(v=>{ if(v!=null) allVals.push(v); }); });
   const scaleA = allVals.length ? Math.max(...allVals.map(Math.abs)) : 10;
-  let a = "<table class='seasontable'><thead><tr><th>Năm</th>"+MONTH_LBL.map(m=>"<th>"+m+"</th>").join("")+"<th>TB năm</th></tr></thead><tbody>";
+  let a='<table class="seasontable"><thead><tr><th>Năm</th>'+MONTH_LBL.map(m=>`<th>${m}</th>`).join('')+'<th>TB năm</th></tr></thead><tbody>';
   years.forEach(y=>{
-    const row = series[y] || Array(12).fill(null);
-    const valid = row.filter(v=>v!==null);
-    const avg = valid.length ? valid.reduce((s,v)=>s+v,0)/valid.length : null;
-    a += "<tr><td class='syr'>"+y+"</td>"
-      + row.map(v=>"<td style='"+seasonColor(v,0,scaleA)+"'>"+seasonPct(v,2)+"</td>").join("")
-      + "<td class='savg' style='"+seasonColor(avg,0,scaleA)+"'>"+seasonPct(avg,2)+"</td></tr>";
+    const row=series[y]||Array(12).fill(null);
+    const valid=row.filter(v=>v!=null);
+    const avg = valid.length? valid.reduce((s,v)=>s+v,0)/valid.length : null;
+    a+=`<tr><td class="syr">${y}</td>`
+      +row.map(v=>`<td style="${seasonColor(v,0,scaleA)}">${seasonPct(v,2)}</td>`).join('')
+      +`<td class="savg" style="${seasonColor(avg,0,scaleA)}">${seasonPct(avg,2)}</td></tr>`;
   });
-  a += "</tbody></table>";
+  a+='</tbody></table>';
 
-  const rngYears = years.filter(y=>y>=seasonState.from && y<=seasonState.to);
-  const monthVals = mi => rngYears.map(y=>(series[y]||[])[mi]).filter(v=>v!==null && v!==undefined);
+  const rngYears=years.filter(y=>y>=state.seasonFrom&&y<=state.seasonTo);
+  const monthVals=mi=>rngYears.map(y=>(series[y]||[])[mi]).filter(v=>v!=null);
 
-  let b = "<table class='seasontable'><thead><tr><th>Giai đoạn</th>"+MONTH_LBL.map(m=>"<th>"+m+"</th>").join("")+"</tr></thead><tbody><tr class='sB'>";
-  b += "<td class='syr'>"+seasonState.from+"–"+seasonState.to+"</td>";
-  for (let mi=0; mi<12; mi++){
-    const vals = monthVals(mi);
-    const p = vals.length ? vals.filter(v=>v>0).length/vals.length*100 : null;
-    b += "<td style='"+seasonColor(p,50,50)+"'>"+(p===null?"–":Math.round(p)+"%")+"</td>";
+  let b='<table class="seasontable"><thead><tr><th>Giai đoạn</th>'+MONTH_LBL.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody><tr class="sB">';
+  b+=`<td class="syr">${state.seasonFrom}–${state.seasonTo}</td>`;
+  for(let mi=0; mi<12; mi++){
+    const vals=monthVals(mi);
+    const p = vals.length? vals.filter(v=>v>0).length/vals.length*100 : null;
+    b+=`<td style="${seasonColor(p,50,50)}">${p==null?'–':Math.round(p)+'%'}</td>`;
   }
-  b += "</tr></tbody></table>";
+  b+='</tr></tbody></table>';
 
-  const monthAvgs = [];
-  for (let mi=0; mi<12; mi++){
-    const vals = monthVals(mi);
-    monthAvgs.push(vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : null);
-  }
-  const scaleC = Math.max(1, ...monthAvgs.filter(v=>v!==null).map(Math.abs));
-  let c = "<table class='seasontable'><thead><tr><th>Giai đoạn</th>"+MONTH_LBL.map(m=>"<th>"+m+"</th>").join("")+"</tr></thead><tbody><tr class='sC'>";
-  c += "<td class='syr'>"+seasonState.from+"–"+seasonState.to+"</td>";
-  monthAvgs.forEach(avg=>{ c += "<td style='"+seasonColor(avg,0,scaleC)+"'>"+seasonPct(avg,2)+"</td>"; });
-  c += "</tr></tbody></table>";
+  const monthAvgs=[];
+  for(let mi=0; mi<12; mi++){ const vals=monthVals(mi); monthAvgs.push(vals.length? vals.reduce((s,v)=>s+v,0)/vals.length : null); }
+  const scaleC = Math.max(1, ...monthAvgs.filter(v=>v!=null).map(Math.abs));
+  let c='<table class="seasontable"><thead><tr><th>Giai đoạn</th>'+MONTH_LBL.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody><tr class="sC">';
+  c+=`<td class="syr">${state.seasonFrom}–${state.seasonTo}</td>`;
+  monthAvgs.forEach(avg=>{ c+=`<td style="${seasonColor(avg,0,scaleC)}">${seasonPct(avg,2)}</td>`; });
+  c+='</tr></tbody></table>';
 
-  document.getElementById("seasonWrap").innerHTML =
-    "<div class='seasonsec'>Phần A · TSSL theo tháng, từng năm</div><div class='seasonwrap-scroll'>"+a+"</div>"
-    + "<div class='seasonsec'>Phần B · Xác suất TSSL dương theo tháng</div><div class='seasonwrap-scroll'>"+b+"</div>"
-    + "<div class='seasonsec'>Phần C · TSSL trung bình theo tháng</div><div class='seasonwrap-scroll'>"+c+"</div>";
-
-  const label = seasonState.view==="industry" ? "Toàn ngành (13 công ty)" : state.company;
-  document.getElementById("seasonTitle").textContent = "Mùa vụ · "+label;
-  document.getElementById("seasonSub").textContent = years[0]+"–"+years[years.length-1]+" · Phần B/C tính theo giai đoạn "+seasonState.from+"–"+seasonState.to;
+  $('#seasonWrap').innerHTML =
+    `<div class="seasonsec">Phần A · TSSL theo tháng, từng năm</div><div class="seasonwrap-scroll">${a}</div>`
+    +`<div class="seasonsec">Phần B · Xác suất TSSL dương theo tháng</div><div class="seasonwrap-scroll">${b}</div>`
+    +`<div class="seasonsec">Phần C · TSSL trung bình theo tháng</div><div class="seasonwrap-scroll">${c}</div>`;
+  const label = state.seasonView==='ind' ? `Toàn ngành (${DB.meta.companies.length} công ty)` : state.seasonCo;
+  $('#ctit').textContent='Mùa vụ · '+label;
+  $('#csub').textContent=`${years[0]}–${years[years.length-1]} · Phần B/C tính theo giai đoạn ${state.seasonFrom}–${state.seasonTo}`;
+  $('#foot').innerHTML='TSSL tháng = giá đóng cửa điều chỉnh cuối tháng / cuối tháng trước − 1. Xanh = dương, đỏ = âm, đậm nhạt theo độ lớn. '
+    +'Tháng niêm yết đầu tiên của mã và tháng đang diễn ra (chưa đủ dữ liệu cả tháng) hiển thị "–". Nguồn: FiinPro.';
+  $('#stats').innerHTML='';
 }
 
-function setupSeasonControls(){
-  document.querySelectorAll("#seasonViewSeg button").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll("#seasonViewSeg button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on"); seasonState.view = b.dataset.view;
-      seasonState.from = null; seasonState.to = null;
-      renderSeason();
-    };
+/* ---------- wiring ---------- */
+function setMode(m){
+  state.mode=m;
+  $$('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  $$('.mctl').forEach(e=>e.classList.toggle('hide', !e.classList.contains('mode-'+m)));
+  $('#ovWrap').classList.toggle('hide', m!=='ov');
+  $('#mainCard').classList.toggle('hide', m==='ov');
+  $('#stats').classList.toggle('hide', m==='ov');
+  $('#exportBtn').classList.toggle('hide', m==='ov'||m==='rank'||m==='season'||m==='share');
+  // rank / season / share dùng bảng HTML thay cho biểu đồ
+  $('#chart').classList.toggle('hide', m==='rank'||m==='season'||m==='share');
+  $('#rankWrap').classList.toggle('hide', m!=='rank');
+  $('#seasonWrap').classList.toggle('hide', m!=='season');
+  $('#shareWrap').classList.toggle('hide', m!=='share');
+  if(m!=='break') $('#tdCard').classList.add('hide');
+  // khoảng thời gian năm/quý không áp dụng cho chuỗi định giá theo ngày,
+  // chuỗi mùa vụ theo tháng và bảng thị phần (có trục kỳ riêng)
+  $('#granWrap').classList.toggle('hide', m==='val'||m==='season'||m==='share');
+  $('#rngWrap').classList.toggle('hide', m==='val'||m==='season'||m==='share');
+  if(m==='break'){
+    $$('#typeSeg button').forEach(b=>b.classList.toggle('hide',!['stack','area','line'].includes(b.dataset.t)));
+    if(!['stack','area','line'].includes(state.type)) setType('stack');
+  } else $$('#typeSeg button').forEach(b=>b.classList.remove('hide'));
+  syncChips(); render();
+  if(m==='ov') OV_INST.forEach(c=>c&&c.resize());
+  else if(chart) chart.resize();
+}
+function setType(t){ state.type=t; $$('#typeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); }
+
+function initApp(){
+  DB=window.DATA;
+  DB.meta.companies.forEach((c,i)=>CO_COLOR[c]=PALETTE[i%PALETTE.length]);
+  DB.metrics.forEach(m=>M_BY_ID[m.id]=m);
+  const q=DB.periods.quarters, y=DB.periods.years;
+  $('#cover').innerHTML=`${DB.meta.companies.length} công ty chứng khoán · ${DB.metrics.length} chỉ tiêu · năm ${y[0]}–${y[y.length-1]} · quý ${q[0]}–${q[q.length-1]}`
+    +(DB.valuation&&DB.valuation.meta?` · định giá theo ngày đến ${DB.valuation.meta.date_end}`:'');
+  $('#boot').classList.add('hide'); $('#app').classList.remove('hide');
+  chart=echarts.init($('#chart'));
+  buildCoPanel(); buildMetricPanel(); buildBreakdownControls(); buildValControls();
+  buildRankControls(); buildSeasonControls(); buildOverview(); fillRange();
+
+  // lựa chọn mặc định cho một màn hình đầu tiên có ý nghĩa
+  ['SSI','TCX','VCI','HCM','VND','SHS','VIX'].forEach(c=>{
+    if(DB.meta.companies.includes(c)){ state.cos.push(c); const cb=$(`#coPanel input[value="${c}"]`); if(cb)cb.checked=true; }
   });
-  document.getElementById("seasonFrom").onchange = e=>{
-    seasonState.from = +e.target.value;
-    if (seasonState.from > seasonState.to) seasonState.to = seasonState.from;
-    renderSeason();
+  const ta=M_BY_ID['total_assets'];
+  if(ta){ state.metrics.push(ta.id); const cb=$(`#metPanel input[value="${CSS.escape(ta.id)}"]`); if(cb)cb.checked=true; }
+  $('#coCnt').textContent=state.cos.length; $('#metCnt').textContent=state.metrics.length;
+  state.shareHi=state.cos[0]||DB.meta.companies[0];
+  $('#shareHi').innerHTML=DB.meta.companies.map(c=>`<option${c===state.shareHi?' selected':''}>${c}</option>`).join('');
+  syncChips();
+
+  // pickers open/close
+  $$('.pick .trig').forEach(t=>t.onclick=e=>{ e.stopPropagation(); const pn=t.nextElementSibling; $$('.panel').forEach(p=>{if(p!==pn)p.classList.remove('open')}); pn.classList.toggle('open'); });
+  document.addEventListener('click',()=>$$('.panel').forEach(p=>p.classList.remove('open')));
+  $$('.panel').forEach(p=>p.onclick=e=>e.stopPropagation());
+
+  // segmented controls
+  $$('#modeSeg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+  $$('#typeSeg button').forEach(b=>b.onclick=()=>setType(b.dataset.t));
+  $$('#xSeg button').forEach(b=>b.onclick=()=>{ state.xaxis=b.dataset.x; $$('#xSeg button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#granSeg button').forEach(b=>b.onclick=()=>{ state.gran=b.dataset.g; $$('#granSeg button').forEach(x=>x.classList.toggle('on',x===b)); fillRange(); render(); });
+  $$('#bkView button').forEach(b=>b.onclick=()=>{ state.bkView=b.dataset.v; $$('#bkView button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#rkN button').forEach(b=>b.onclick=()=>{ state.rkN=+b.dataset.n; $$('#rkN button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#cmpSort button').forEach(b=>b.onclick=()=>{ state.cmpSort=b.dataset.s; $$('#cmpSort button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#valView button').forEach(b=>b.onclick=()=>{ state.valView=b.dataset.vv; $$('#valView button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#valMetric button').forEach(b=>b.onclick=()=>{ state.valMetric=b.dataset.vm; $$('#valMetric button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#valBands button').forEach(b=>b.onclick=()=>{ state.valBands=b.dataset.vb==='1'; $$('#valBands button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#valInd button').forEach(b=>b.onclick=()=>{ state.valIndStat=b.dataset.vi; $$('#valInd button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#seasonView button').forEach(b=>b.onclick=()=>{ state.seasonView=b.dataset.sv;
+    $$('#seasonView button').forEach(x=>x.classList.toggle('on',x===b));
+    $('#seasonCoWrap').classList.toggle('hide', state.seasonView!=='co');
+    state.seasonFrom=null; state.seasonTo=null; render(); });
+  $$('#shareGran button').forEach(b=>b.onclick=()=>{ state.shareGran=b.dataset.sg; $$('#shareGran button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+
+  // selects
+  $('#rngFrom').onchange=e=>{ state.from=+e.target.value; if(state.from>state.to){state.to=state.from;$('#rngTo').value=state.to;} render(); };
+  $('#rngTo').onchange=e=>{ state.to=+e.target.value; if(state.to<state.from){state.from=state.to;$('#rngFrom').value=state.from;} render(); };
+  $('#atSel').onchange=e=>{ state.at=+e.target.value; render(); };
+  $('#bkCo').onchange=e=>{ state.bkCo=e.target.value; render(); };
+  $('#bkGroup').onchange=e=>{ state.bkGroup=e.target.value; render(); };
+  $('#rkMetric').onchange=e=>{ state.rkMetric=e.target.value; render(); };
+  $('#valCo').onchange=e=>{ state.valCo=e.target.value; render(); };
+  $('#valHi').onchange=e=>{ state.valHi=e.target.value; render(); };
+  $('#shareHi').onchange=e=>{ state.shareHi=e.target.value; render(); };
+  $('#seasonCo').onchange=e=>{ state.seasonCo=e.target.value; state.seasonFrom=null; state.seasonTo=null; render(); };
+  $('#seasonFrom').onchange=e=>{ state.seasonFrom=+e.target.value; if(state.seasonFrom>state.seasonTo){state.seasonTo=state.seasonFrom;} render(); };
+  $('#seasonTo').onchange=e=>{ state.seasonTo=+e.target.value; if(state.seasonTo<state.seasonFrom){state.seasonFrom=state.seasonTo;} render(); };
+
+  $('#exportBtn').onclick=()=>{
+    const url=chart.getDataURL({pixelRatio:2,backgroundColor:'#fff'});
+    const a=document.createElement('a'); a.href=url; a.download='vp-ctck-'+state.mode+'.png'; a.click();
   };
-  document.getElementById("seasonTo").onchange = e=>{
-    seasonState.to = +e.target.value;
-    if (seasonState.to < seasonState.from) seasonState.from = seasonState.to;
-    renderSeason();
-  };
-}
-
-// ---------- ranking tab ----------
-function renderRankMetricChips(){
-  const el = document.getElementById("rankMetricChips");
-  el.innerHTML = "";
-  RANK_METRIC_OPTIONS.forEach(([id,label])=>{
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "chip"+(state.rankMetric===id?" on":"");
-    chip.textContent = label;
-    chip.onclick = ()=>{ state.rankMetric = id; renderRankMetricChips(); renderRanking(); };
-    el.appendChild(chip);
-  });
-}
-
-function getRankValue(ticker, metricId){
-  if (metricId === "__margin_pct__"){
-    const m = computedMarginPct(ticker);
-    return m.value===null?null:m.value*100;
-  }
-  const {latest} = latestPair(ticker, metricId);
-  const isPctMetric = METRICS[metricId] && METRICS[metricId].unit==="%";
-  return latest===null ? null : (isPctMetric ? latest*100 : latest);
-}
-
-function renderRanking(){
-  const metricId = state.rankMetric;
-  const label = RANK_METRIC_OPTIONS.find(x=>x[0]===metricId)[1];
-  document.getElementById("rankTitle").textContent = "Xếp hạng theo "+label;
-  const isRatioOnly = ["roe","roa","net_margin","pb","pe_basic","growth_revenue_yoy"].includes(metricId);
-  document.getElementById("rankDesc").textContent = "Giá trị quý gần nhất có dữ liệu của từng công ty."+
-    (isRatioOnly ? " Chỉ áp dụng cho các công ty đã có file chỉ số tài chính FiinPro." : "");
-
-  let rows = COMPANIES.map(t=>({ticker:t, value:getRankValue(t, metricId)})).filter(r=>r.value!==null);
-  rows.sort((a,b)=>b.value-a.value);
-
-  const isPct = metricId==="__margin_pct__" || (METRICS[metricId]&&METRICS[metricId].unit==="%");
-  const colorFn = (metricId==="__margin_pct__") ? (v)=> v>=180?CC.bad: v>=140?CC.warn:CC.good : ()=>CC.spark;
-
-  const c = getChart("rankChart");
-  c.setOption({
-    animation:false,
-    tooltip:{trigger:"axis", axisPointer:{type:"shadow"}, formatter:p=>{
-      const d=p[0]; return d.axisValue+": "+fmtNum(d.data,isPct?1:0)+(isPct?"%":"");
-    }},
-    grid:{left:60, right:24, top:16, bottom:30},
-    xAxis:{type:"category", data:rows.map(r=>r.ticker), axisLabel:AXIS_TEXT, axisLine:GRID_LINE},
-    yAxis:{type:"value", axisLabel:AXIS_TEXT, splitLine:GRID_LINE},
-    series:[{type:"bar", data:rows.map(r=>({value:r.value, itemStyle:{color:colorFn(r.value)}})), barMaxWidth:34,
-      label:{show:true, position:"top", formatter:p=>fmtNum(p.data.value||p.data,isPct?1:0), fontSize:10, fontFamily:"IBM Plex Mono", color:CC.axis}}]
-  }, true);
-}
-
-// ---------- nav / chips ----------
-function renderCompanyChips(){
-  const el = document.getElementById("companyChips");
-  el.innerHTML = "";
-  COMPANIES.forEach(t=>{
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "chip"+(state.company===t?" on":"");
-    chip.textContent = t + (RATIO_COS.has(t) ? "" : " ·");
-    chip.title = RATIO_COS.has(t) ? "" : "Chưa có file chỉ số tài chính/định giá";
-    chip.onclick = ()=>{ state.company = t; renderCompanyChips(); renderCurrentPanel(); };
-    el.appendChild(chip);
-  });
-}
-
-function renderCurrentPanel(){
-  if (state.mode==="overview") renderOverview();
-  else if (state.mode==="revenue") renderRevenue();
-  else if (state.mode==="proprietary") renderProprietary();
-  else if (state.mode==="marketshare") renderMarketShare();
-  else if (state.mode==="ranking") renderRanking();
-  else if (state.mode==="valuation") renderValuation();
-  else if (state.mode==="season") renderSeason();
-}
-
-function setupModeSeg(){
-  const btns = document.querySelectorAll("#modeSeg button");
-  btns.forEach(b=>{
-    b.onclick = ()=>{
-      btns.forEach(x=>x.classList.remove("on"));
-      b.classList.add("on");
-      state.mode = b.dataset.mode;
-      document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("on"));
-      document.getElementById("panel-"+state.mode).classList.add("on");
-      updateExportBtnVisibility();
-      renderCurrentPanel();
-      window.dispatchEvent(new Event("resize"));
-    };
-  });
-}
-
-// ---------- export current chart as PNG ----------
-function currentExportChartId(){
-  if (state.mode==="revenue") return "revChart";
-  if (state.mode==="proprietary") return "tdStackChart";
-  if (state.mode==="ranking") return "rankChart";
-  if (state.mode==="valuation") return "valChart";
-  return null;
-}
-function updateExportBtnVisibility(){
-  document.getElementById("exportBtn").classList.toggle("hide", state.mode==="overview" || state.mode==="marketshare" || state.mode==="season");
-}
-document.getElementById("exportBtn").onclick = ()=>{
-  const id = currentExportChartId();
-  if (!id || !charts[id]) return;
-  const url = charts[id].getDataURL({pixelRatio:2, backgroundColor:"#fff"});
-  const a = document.createElement("a");
-  a.href = url; a.download = "ctck-"+state.company+"-"+state.mode+".png"; a.click();
-};
-
-// ---------- init ----------
-document.getElementById("cover").textContent =
-  COMPANIES.length + " công ty chứng khoán · " + RATIO_COS.size + " có đầy đủ chỉ số định giá · quý " + PERIODS[0] + " – " + PERIODS[PERIODS.length-1];
-
-renderCompanyChips();
-setupModeSeg();
-setupMarketShareControls();
-setupValuationControls();
-setupSeasonControls();
-renderRankMetricChips();
-renderOverview();
-updateExportBtnVisibility();
-
-window.addEventListener("resize", ()=>{
-  Object.values(charts).forEach(c=>{ try{c.resize();}catch(e){} });
-});
-
+  window.addEventListener('resize',()=>{ chart.resize(); OV_INST.forEach(c=>c&&c.resize()); });
+  setMode('ov');
 }
 </script>
 <script>
 fetch('ctck_data.json')
   .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-  .then(json=>{
-    window.DATA = json;
-    document.getElementById('boot').classList.add('hide');
-    document.getElementById('app').classList.remove('hide');
-    initApp();
-  })
+  .then(json=>{ window.DATA=json; initApp(); })
   .catch(e=>{
-    document.getElementById('boot').innerHTML = 'Không tải được <b>ctck_data.json</b> ('+e.message+').<br>'
-      + '<span style="font-size:12px">Đảm bảo file nằm cùng thư mục với index.html và đang chạy qua web server (GitHub Pages) chứ không mở bằng file://.</span>';
+    document.getElementById('boot').innerHTML='Không tải được <b>ctck_data.json</b> ('+e.message+').<br>'
+      +'<span style="font-size:12px">Đảm bảo file nằm cùng thư mục với index.html và đang chạy qua web server (GitHub Pages) chứ không mở bằng file://.</span>';
   });
 </script>
 </body>
