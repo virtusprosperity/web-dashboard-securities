@@ -192,10 +192,13 @@
             <button data-mode="ov" class="on">Tổng quan</button>
             <button data-mode="compare">So sánh</button>
             <button data-mode="break">Phân rã cấu phần</button>
+            <button data-mode="td">Tự doanh</button>
             <button data-mode="rank">Xếp hạng</button>
             <button data-mode="share">Thị phần</button>
             <button data-mode="val">Định giá</button>
             <button data-mode="season">Mùa vụ</button>
+            <button data-mode="ind">Toàn ngành</button>
+            <button data-mode="cap">Tăng vốn</button>
           </div>
         </div>
 
@@ -229,6 +232,20 @@
           <div class="seg sm" id="bkView">
             <button data-v="abs" class="on">Giá trị</button>
             <button data-v="share">Tỷ trọng %</button>
+          </div>
+        </div>
+
+        <!-- proprietary book (tự doanh) controls -->
+        <div class="ctrl mctl mode-td hide">
+          <span class="lbl">Công ty</span>
+          <select id="tdCo" class="rng"></select>
+        </div>
+        <div class="ctrl mctl mode-td hide">
+          <span class="lbl">Xem</span>
+          <div class="seg sm" id="tdView">
+            <button data-tv="class" class="on">Cơ cấu danh mục</button>
+            <button data-tv="asset">Theo loại tài sản</button>
+            <button data-tv="unreal">Lãi/(lỗ) chưa thực hiện</button>
           </div>
         </div>
 
@@ -288,6 +305,20 @@
 
         <!-- market share controls -->
         <div class="ctrl mctl mode-share hide">
+          <span class="lbl">Xem</span>
+          <div class="seg sm" id="shareView">
+            <button data-sv="table" class="on">Bảng</button>
+            <button data-sv="line">Đường</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-share hide" id="shareMetricWrap">
+          <span class="lbl">Chỉ tiêu</span>
+          <div class="seg sm" id="shareMetric">
+            <button data-sm="margin_share_pct" class="on">Margin</button>
+            <button data-sm="brokerage_share_pct">Môi giới</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-share hide">
           <span class="lbl">Kỳ</span>
           <div class="seg sm" id="shareGran">
             <button data-sg="q" class="on">Theo quý</button>
@@ -297,6 +328,22 @@
         <div class="ctrl mctl mode-share hide">
           <span class="lbl">Làm nổi bật</span>
           <select id="shareHi" class="rng"></select>
+        </div>
+
+        <!-- industry controls -->
+        <div class="ctrl mctl mode-ind hide">
+          <span class="lbl">Kỳ</span>
+          <div class="seg sm" id="indGran">
+            <button data-ig="q" class="on">Theo quý</button>
+            <button data-ig="y">Theo năm</button>
+          </div>
+        </div>
+        <div class="ctrl mctl mode-ind hide">
+          <span class="lbl">Hiện</span>
+          <div class="seg sm" id="indView">
+            <button data-iv="val" class="on">Giá trị</button>
+            <button data-iv="growth">Tăng trưởng %YoY</button>
+          </div>
         </div>
 
         <!-- seasonality controls -->
@@ -377,6 +424,16 @@
       <div class="ovfoot">Đường bị ngắt quãng = kỳ không có số liệu trong nguồn. Chỉ tiêu dòng chảy (doanh thu, lợi nhuận) chỉ hiện theo năm khi đã đủ 4 quý. Nguồn: FiinPro.</div>
     </div>
 
+    <!-- INDUSTRY GRID -->
+    <div id="indWrap" class="hide">
+      <div class="ovmeta" id="indMeta"></div>
+      <div class="ovgrid" id="indGrid"></div>
+      <div class="ovfoot" id="indFoot"></div>
+    </div>
+
+    <!-- CAPITAL RAISE -->
+    <div id="capWrap" class="hide"></div>
+
     <!-- CHART / TABLE -->
     <div class="card" id="mainCard">
       <h2 class="ctit" id="ctit">—</h2>
@@ -413,9 +470,15 @@
    dùng chung một ngôn ngữ thao tác: picker đa chọn + chips, lưới Tổng quan,
    1 khung biểu đồ dùng chung, kỳ Năm/Quý + khoảng thời gian. */
 
+// 36 màu — đủ cho 34 công ty mà không lặp lại. 24 màu đầu giữ nguyên của dashboard
+// bank để 2 dashboard cùng tông; 12 màu sau mở rộng trong cùng dải trầm/đất.
 const PALETTE = ['#9B7B47','#3C5A6E','#8C3B3B','#4F6F52','#B08A4F','#5A4A6A','#2F6F73','#8A5A3C',
                  '#41607F','#7C4B5C','#3F5E4B','#6B4F3A','#94703F','#4A5468','#7A3F4A','#566B3C',
-                 '#476B82','#615070','#86523F','#3E6660','#A07A4A','#7B5340','#445F73','#5C5C6E'];
+                 '#476B82','#615070','#86523F','#3E6660','#A07A4A','#7B5340','#445F73','#5C5C6E',
+                 // 12 màu cho các mã bổ sung: chọn để cách xa 24 màu gốc trong không gian
+                 // CIELAB (ΔE tối thiểu 15) mà vẫn giữ độ trầm của bảng màu ngân hàng
+                 '#A35CA3','#5CA35C','#5C5CA3','#97A35C','#5CA393','#887C63',
+                 '#A35C84','#80946B','#73467C','#5C97A3','#4D895B','#946B6B'];
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let DB, M_BY_ID={}, CO_COLOR={}, chart;
 
@@ -425,9 +488,11 @@ const state={
   type:'group', xaxis:'time', gran:'y',
   from:0, to:0, at:0,
   bkCo:null, bkGroup:null, bkView:'abs',
+  tdCo:null, tdView:'class',
   valView:'co', valCo:null, valMetric:'PB', valBands:true, valIndStat:'mean', valHi:'',
   rkMetric:null, rkN:5, cmpSort:'none',
-  shareGran:'q', shareHi:'',
+  shareGran:'q', shareHi:'', shareView:'table', shareMetric:'margin_share_pct',
+  indGran:'q', indView:'val',
   seasonView:'co', seasonCo:null, seasonFrom:null, seasonTo:null
 };
 
@@ -435,14 +500,16 @@ const state={
 function fmtBn(v){
   if(v==null||isNaN(v)) return '–';
   const a=Math.abs(v);
-  if(a>=1e6) return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tr tỷ';
-  if(a>=1e3) return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:1})+' ng tỷ';
-  return v.toLocaleString('vi-VN',{maximumFractionDigits:1})+' tỷ';
+  // dưới 10 nghìn tỷ vẫn đọc thẳng bằng "tỷ" cho dễ đối chiếu với báo cáo
+  if(a>=1e7) return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tr tỷ';
+  if(a>=1e4) return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:1})+' ng tỷ';
+  return v.toLocaleString('vi-VN',{maximumFractionDigits:a<100?1:0})+' tỷ';
 }
 function fmtAxisBn(v){
+  // 1 chữ số thập phân để 2.000 và 2.500 không cùng hiện ra "2K"
   const a=Math.abs(v);
-  if(a>=1e6) return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+'M';
-  if(a>=1e3) return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:0})+'K';
+  if(a>=1e6) return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tr';
+  if(a>=1e3) return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:1})+' ng';
   return v.toLocaleString('vi-VN',{maximumFractionDigits:0});
 }
 function fmtPct(v){ return v==null||isNaN(v)?'–':v.toLocaleString('vi-VN',{maximumFractionDigits:2})+'%'; }
@@ -527,7 +594,7 @@ function removeChip(kind,v){
   syncChips(); render();
 }
 function syncChips(){
-  if(['break','val','season','rank','share'].includes(state.mode)){ $('#chips').innerHTML=''; return; }
+  if(['break','td','val','season','rank','share'].includes(state.mode)){ $('#chips').innerHTML=''; return; }
   let h='';
   state.cos.forEach(c=>{ h+=`<span class="chip"><span class="dot" style="background:${CO_COLOR[c]}"></span>${c}<button class="x" onclick="removeChip('c','${c}')">×</button></span>`; });
   if(state.mode==='compare')
@@ -647,6 +714,9 @@ function render(){
   else if(state.mode==='rank') renderRank();
   else if(state.mode==='season') renderSeason();
   else if(state.mode==='share') renderShare();
+  else if(state.mode==='td') renderTd();
+  else if(state.mode==='ind') renderIndustry();
+  else if(state.mode==='cap') renderCapital();
   else renderBreak();
 }
 function seriesColor(i){ return PALETTE[i%PALETTE.length]; }
@@ -805,7 +875,7 @@ function renderBreak(){
   const co=state.bkCo, gi=+state.bkGroup, grp=DB.breakdowns[gi];
   const comps=groupComponents(gi).filter(m=>{ const d=DB.data[co][m.id]; return d&&(d.y||d.q); });
   const ps=rangeList();
-  renderTdCard(co, grp);
+  renderTdCard(co, !!grp && TD_GROUPS.includes(grp.name));
   if(!comps.length){
     $('#ctit').textContent=grp?grp.name:'—'; $('#csub').textContent=co;
     $('#stats').innerHTML=''; $('#foot').textContent='Công ty này không có dữ liệu phân rã cho nhóm đã chọn.';
@@ -872,9 +942,9 @@ function renderBreak(){
 }
 
 /* chi tiết từng mã cổ phiếu — chỉ có cho Q2/2026, hiện kèm các nhóm tự doanh */
-function renderTdCard(co, grp){
+function renderTdCard(co, show){
   const card=$('#tdCard');
-  const detail = grp && TD_GROUPS.includes(grp.name) ? (DB.tu_doanh_detail||{})[co] : null;
+  const detail = show ? (DB.tu_doanh_detail||{})[co] : null;
   if(!detail || !detail.items || !detail.items.length){ card.classList.add('hide'); return; }
   card.classList.remove('hide');
   const hasF=detail.items.some(it=>/FVTPL/.test(it.tag)), hasA=detail.items.some(it=>/AFS/.test(it.tag));
@@ -901,7 +971,163 @@ function renderTdCard(co, grp){
     + `<td class="hc-v">${rd.toLocaleString('vi-VN')}</td><td class="hc-s">100%</td></tr>`;
   $('#tdFoot').innerHTML='Nguồn: Thuyết minh Báo cáo tài chính (PDF) quý Q2/2026 — không phải FiinPro. Chỉ có số liệu một quý, chưa so sánh được qua các quý. '
     +'"Khác" là phần còn lại gộp theo thuyết minh gốc. Công ty không nêu đích danh từng mã thì chỉ hiện theo nhóm tài sản. '
-    +(detail.note?escHtml(detail.note)+' ':'')+'Đơn vị: tỷ VND.';
+    +(detail.note?escHtml(detail.note.replace(/[.\s]*$/,''))+'. ':'')+'Đơn vị: tỷ VND.';
+}
+
+/* ---------- danh mục tự doanh (mảng đặc thù của CTCK, bank không có) ---------- */
+// FVTPL & AFS đánh giá lại theo giá thị trường -> dùng giá trị hợp lý.
+// HTM theo VAS hạch toán theo giá gốc và hiếm khi công bố giá trị hợp lý,
+// nên dùng giá trị ghi sổ (chính là giá trị đang hạch toán) thay vì giá trị hợp lý.
+const TD_CLASSES=[
+  ['fvtpl_fv_total','FVTPL — giá trị hợp lý'],
+  ['afs_fv_total','AFS — giá trị hợp lý'],
+  ['htm_cost_total','HTM — giá trị ghi sổ'],
+];
+const TD_ASSETS=[
+  ['Cổ phiếu niêm yết',        ['fvtpl_fv_listed','afs_fv_listed','htm_cost_listed']],
+  ['Cổ phiếu chưa niêm yết',   ['fvtpl_fv_unlisted','afs_fv_unlisted','htm_cost_unlisted']],
+  ['Chứng chỉ quỹ',            ['fvtpl_fv_fundcert','afs_fv_fundcert']],
+  ['Trái phiếu',               ['fvtpl_fv_bond','afs_fv_bond','htm_cost_bond']],
+];
+
+function buildTdControls(){
+  $('#tdCo').innerHTML=DB.meta.companies.map(c=>`<option>${c}</option>`).join('');
+  state.tdCo=DB.meta.companies[0];
+}
+// tổng nhiều chỉ tiêu tại 1 kỳ; trả null nếu không chỉ tiêu nào có số liệu
+function sumParts(co, ids, p){
+  let s=0, any=false;
+  ids.forEach(id=>{ const v=rawVal(co,id,p); if(v!=null){ s+=v; any=true; } });
+  return any?s:null;
+}
+
+function renderTd(){
+  const co=state.tdCo, ps=rangeList(), view=state.tdView;
+  renderTdCard(co, true);   // bảng chi tiết Q2/2026 luôn hiện ở tab này
+
+  if(view==='unreal'){
+    // Lãi/(lỗ) chưa thực hiện — CHỈ FVTPL + AFS. Không gồm HTM: theo VAS, HTM
+    // hạch toán theo giá gốc và ít khi công bố giá trị hợp lý, đưa vào so sánh
+    // sẽ tạo ra khoản chênh lệch không có thật.
+    const cost=ps.map(p=>sumParts(co,['fvtpl_cost_total','afs_cost_total'],p));
+    const fv  =ps.map(p=>sumParts(co,['fvtpl_fv_total','afs_fv_total'],p));
+    const diff=ps.map((p,i)=> (cost[i]!=null&&fv[i]!=null) ? Math.round((fv[i]-cost[i])*100)/100 : null);
+    chart.setOption({
+      textStyle:{fontFamily:'IBM Plex Sans'},
+      tooltip:{trigger:'axis', backgroundColor:'#211C16', borderColor:'#211C16',
+        textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:12},
+        formatter:params=>{
+          let s=`<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`;
+          params.forEach(p=>{ s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${p.marker}${p.seriesName}</span><b>${fmtBn(p.value)}</b></div>`; });
+          return s;
+        }},
+      legend:{bottom:0, icon:'roundRect', textStyle:{fontFamily:'IBM Plex Mono',fontSize:11}},
+      grid:{left:64, right:70, top:22, bottom:52},
+      xAxis:{type:'category', data:ps, axisTick:{show:false}, axisLine:{lineStyle:{color:'#D8CFBE'}},
+        axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, rotate:ps.length>8?38:0}},
+      // Chênh lệch nhỏ hơn quy mô danh mục 2-3 bậc (SSI: 138 tỷ trên 44.800 tỷ)
+      // nên để chung trục sẽ thành đường phẳng vô hình -> tách sang trục phải.
+      yAxis:[
+        {type:'value', name:'quy mô danh mục (tỷ đồng)', nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+          splitLine:{lineStyle:{color:'#EFE9DD'}}, axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,formatter:fmtAxisBn}},
+        {type:'value', name:'lãi/(lỗ) chưa thực hiện', position:'right',
+          nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+          splitLine:{show:false}, axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,formatter:fmtAxisBn}},
+      ],
+      series:[
+        {name:'Giá gốc', type:'line', data:cost, connectNulls:true, symbol:'circle', symbolSize:6,
+          lineStyle:{color:'#8C8276',width:2}, itemStyle:{color:'#8C8276'}},
+        {name:'Giá trị hợp lý', type:'line', data:fv, connectNulls:true, symbol:'circle', symbolSize:6,
+          lineStyle:{color:'#9B7B47',width:2}, itemStyle:{color:'#9B7B47'}},
+        {name:'Lãi/(lỗ) chưa thực hiện', type:'bar', data:diff, barMaxWidth:34, yAxisIndex:1,
+          itemStyle:{color:p=>p.data>=0?'#4F6F52':'#8C3B3B', borderRadius:[3,3,0,0]}},
+      ]
+    }, true);
+    $('#ctit').textContent='Sổ sách vs. Giá trị hợp lý — '+co;
+    $('#csub').textContent=`Lãi/(lỗ) chưa thực hiện danh mục FVTPL + AFS · ${ps[0]}–${ps[ps.length-1]}`;
+    $('#foot').innerHTML='Không gồm HTM: theo VAS, HTM hạch toán theo giá gốc và ít khi công bố giá trị hợp lý, '
+      +'nên đưa vào so sánh sẽ tạo ra chênh lệch không có thật. <b>Cột chênh lệch đọc ở trục phải</b> — '
+      +'khoản lãi/lỗ chưa thực hiện thường nhỏ hơn quy mô danh mục 2–3 bậc nên để chung trục sẽ không nhìn thấy. Nguồn: FiinPro.';
+    const last=lastWithData(ps, p=>fv[ps.indexOf(p)]!=null);
+    const li=ps.indexOf(last), c=cost[li], f=fv[li], dpct=(c&&f!=null)?((f-c)/Math.abs(c)*100):null;
+    $('#stats').innerHTML=[
+      stCard('Giá gốc', fmtBn(c), last, '#8C8276'),
+      stCard('Giá trị hợp lý', fmtBn(f), last, '#9B7B47'),
+      stCard('Lãi/(lỗ) chưa thực hiện', fmtBn(diff[li]), dpct!=null?(dpct>=0?'+':'')+dpct.toFixed(1)+'% so với giá gốc':'', diff[li]>=0?'#4F6F52':'#8C3B3B'),
+    ].join('');
+    return;
+  }
+
+  const isClass = view==='class';
+  const defs = isClass ? TD_CLASSES.map(([id,label])=>[label,[id]]) : TD_ASSETS;
+  const series = defs.map(([label,ids],i)=>({
+    name:label, type:'bar', stack:'td', barMaxWidth:44,
+    data:ps.map(p=>sumParts(co,ids,p)),
+    itemStyle:{color:seriesColor(i), borderRadius:[3,3,0,0]},
+  }));
+  // FiinPro chỉ tách 4 loại tài sản, không có dòng chứng chỉ tiền gửi — với
+  // nhiều công ty đây lại là phần lớn nhất (SSI: 27.180 tỷ CCTG trên 44.114 tỷ
+  // FVTPL). Lấy phần dư = tổng 3 nhóm − 4 loại đã tách để cột không hụt so với
+  // chế độ "Cơ cấu danh mục".
+  if(!isClass){
+    const totIds = TD_CLASSES.map(([id])=>id);
+    const rest = ps.map((p,k)=>{
+      const tot = sumParts(co,totIds,p);
+      if(tot==null) return null;
+      const named = series.reduce((a,s)=>a+(s.data[k]||0),0);
+      const d = tot-named;
+      return d>0.05 ? d : (d>-0.05 ? 0 : null);
+    });
+    if(rest.some(v=>v)) series.push({
+      name:'Chứng chỉ tiền gửi & khác', type:'bar', stack:'td', barMaxWidth:44,
+      // tím trầm: tách hẳn khỏi 4 màu vàng/xanh/đỏ/lục của 4 loại phía trên
+      data:rest, itemStyle:{color:'#5A4A6A', borderRadius:[3,3,0,0]},
+    });
+  }
+  const anyData = series.some(s=>s.data.some(v=>v!=null));
+  chart.clear();
+  if(!anyData){
+    chart.setOption({graphic:{type:'text',left:'center',top:'middle',
+      style:{text:`${co} không có dữ liệu danh mục tự doanh cho khoảng kỳ này`,fill:'#8C8276',font:'14px IBM Plex Sans'}}});
+    $('#ctit').textContent='Danh mục tự doanh — '+co; $('#csub').textContent=''; $('#stats').innerHTML='';
+    $('#foot').textContent='';
+    return;
+  }
+  chart.setOption({
+    textStyle:{fontFamily:'IBM Plex Sans'},
+    tooltip:{trigger:'axis', axisPointer:{type:'shadow'}, backgroundColor:'#211C16', borderColor:'#211C16',
+      textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:12},
+      formatter:params=>{
+        let s=`<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`, tot=0;
+        params.forEach(p=>{ if(p.value!=null){ tot+=p.value;
+          s+=`<div style="display:flex;justify-content:space-between;gap:14px"><span>${p.marker}${p.seriesName}</span><b>${fmtBn(p.value)}</b></div>`; } });
+        s+=`<div style="border-top:1px solid #4A4237;margin-top:4px;padding-top:3px;display:flex;justify-content:space-between;gap:14px"><span>Tổng</span><b>${fmtBn(tot)}</b></div>`;
+        return s;
+      }},
+    legend:{bottom:0, icon:'roundRect', textStyle:{fontFamily:'IBM Plex Mono',fontSize:11}},
+    grid:{left:64, right:24, top:22, bottom:52},
+    xAxis:{type:'category', data:ps, axisTick:{show:false}, axisLine:{lineStyle:{color:'#D8CFBE'}},
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, rotate:ps.length>8?38:0}},
+    yAxis:{type:'value', name:'tỷ đồng', nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+      splitLine:{lineStyle:{color:'#EFE9DD'}}, axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11,formatter:fmtAxisBn}},
+    series
+  }, true);
+  $('#ctit').textContent='Danh mục tự doanh — '+co;
+  $('#csub').textContent=(isClass?'Theo nhóm tài sản tài chính (FVTPL / AFS / HTM)':'Theo loại tài sản nắm giữ, gộp cả 3 nhóm FVTPL + AFS + HTM')
+    +` · ${ps[0]}–${ps[ps.length-1]}`;
+  $('#foot').innerHTML='FVTPL &amp; AFS theo giá trị hợp lý, HTM theo giá trị ghi sổ (theo VAS, HTM hạch toán theo giá gốc). '
+    +(isClass?'':'Chứng chỉ quỹ không có ở nhóm HTM. ')+'Nguồn: FiinPro.';
+
+  const last=lastWithData(ps, p=>series.some(s=>s.data[ps.indexOf(p)]!=null));
+  const li=ps.indexOf(last);
+  const tot=series.reduce((s,x)=>s+(x.data[li]||0),0);
+  $('#stats').innerHTML=series.map((s,i)=>{
+    const v=s.data[li];
+    // lấy màu từ chính series để thẻ số khớp với cột trong biểu đồ
+    return stCard(s.name, fmtBn(v), last+(tot&&v!=null?' · '+(v/tot*100).toFixed(1)+'% danh mục':''),
+                  s.itemStyle&&s.itemStyle.color||seriesColor(i));
+  }).join('')
+   + stCard('Tổng danh mục', fmtBn(tot), last, '#211C16');
 }
 
 /* ---------- ranking ---------- */
@@ -949,7 +1175,7 @@ function renderRank(){
   $('#ctit').textContent='Xếp hạng · '+m.label;
   $('#csub').textContent=`${ps.length} kỳ ${state.gran==='y'?'năm':'quý'} gần nhất đến ${ps[ps.length-1]} · đơn vị: ${UNIT_LBL[m.unit]}`;
   $('#foot').innerHTML='Nền vàng đậm dần theo độ lớn trong kỳ. ▲▼ = thay đổi thứ hạng so với kỳ liền trước.'
-    +(isBn?' Cột % = tỷ trọng trên tổng 13 công ty có số liệu trong kỳ (không phải toàn ngành).':'')
+    +(isBn?' Cột % = tỷ trọng trên tổng các công ty trong dashboard có số liệu trong kỳ (không phải toàn ngành).':'')
     +' Công ty thiếu số liệu kỳ nào sẽ không xuất hiện trong kỳ đó. Nguồn: FiinPro.';
   $('#stats').innerHTML='';
 }
@@ -975,7 +1201,7 @@ function shareTable(metricKey, periods, gran){
     });
   });
   const sel=state.shareHi;
-  let h='<thead><tr><th>Kỳ</th>'+cos.map(c=>`<th${c===sel?' class="mssel"':''}>${c}</th>`).join('')+'<th>Tổng 13 CT</th></tr></thead><tbody>';
+  let h='<thead><tr><th>Kỳ</th>'+cos.map(c=>`<th${c===sel?' class="mssel"':''}>${c}</th>`).join('')+`<th>Tổng ${cos.length} CT</th></tr></thead><tbody>`;
   periods.forEach(p=>{
     let sum=0, any=false;
     const cells=cos.map(c=>{
@@ -987,24 +1213,169 @@ function shareTable(metricKey, periods, gran){
   });
   return h+'</tbody>';
 }
+/* Thị phần dạng ĐƯỜNG — vẽ các công ty đang chọn ở picker, để so diễn biến
+   theo thời gian thay vì đọc bảng nhiệt. Dùng chung khung #chart. */
+function renderShareLine(periods, gran){
+  const cos = state.cos.length ? state.cos : DB.meta.companies.slice(0, 8);
+  const mk = state.shareMetric;
+  const series = cos.map(c=>{
+    const d = DB.data[c] && DB.data[c][mk];
+    const src = d ? (gran==='y' ? d.y : d.q) : null;
+    return { name:c, type:'line', smooth:false, symbol:'circle', symbolSize:4,
+      lineStyle:{width:2}, itemStyle:{color:CO_COLOR[c]||seriesColor(cos.indexOf(c))},
+      emphasis:{focus:'series'},
+      data: periods.map(p=> src && src[p]!=null ? Math.round(src[p]*100)/100 : null) };
+  });
+  chart.clear();
+  // #chart vừa được bỏ ẩn ngay trước đó -> echarts vẫn giữ kích thước cũ (bằng 0),
+  // phải resize trước khi vẽ, nếu không cả biểu đồ dồn vào mép trái.
+  chart.resize();
+  chart.setOption({
+    textStyle:{fontFamily:'IBM Plex Sans'},
+    tooltip:{trigger:'axis', backgroundColor:'#211C16', borderColor:'#211C16',
+      textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:12},
+      formatter:ps=>{
+        const rows=ps.filter(p=>p.value!=null).sort((a,b)=>b.value-a.value);
+        return `<div style="font-weight:600;margin-bottom:4px">${ps[0].axisValue}</div>`
+          + rows.map(p=>`<div style="display:flex;justify-content:space-between;gap:14px"><span>${p.marker}${p.seriesName}</span><b>${p.value.toFixed(2)}%</b></div>`).join('');
+      }},
+    legend:{bottom:0, type:'scroll', icon:'roundRect', textStyle:{fontFamily:'IBM Plex Mono',fontSize:11}},
+    grid:{left:56, right:24, top:22, bottom:56},
+    xAxis:{type:'category', data:periods, axisTick:{show:false},
+      axisLine:{lineStyle:{color:'#D8CFBE'}},
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, rotate:periods.length>10?38:0}},
+    yAxis:{type:'value', name:'%', nameTextStyle:{fontFamily:'IBM Plex Mono',fontSize:10,color:'#8C8276'},
+      splitLine:{lineStyle:{color:'#EFE9DD'}},
+      axisLabel:{fontFamily:'IBM Plex Mono',fontSize:11, formatter:v=>v+'%'}},
+    series
+  }, true);
+}
+/* ---------- TOÀN NGÀNH: cộng ngang 34 công ty ---------- */
+let IND_LIST=[], IND_INST=[];
+function buildIndustry(){
+  IND_LIST=(DB.industry&&DB.industry.metrics)||[];
+  $('#indGrid').innerHTML=IND_LIST.map((m,i)=>`
+    <div class="ovcard">
+      <div class="ovhead">
+        <div><h3 class="ovtit">${escHtml(m.label)}</h3>
+             <div class="ovsub" id="indsub${i}"></div></div>
+      </div>
+      <div class="ovchart" id="ind${i}"></div>
+    </div>`).join('');
+  IND_INST=IND_LIST.map(()=>null);
+}
+function renderIndustry(){
+  const D=DB.industry; if(!D) return;
+  const gran=state.indGran, growth=state.indView==='growth';
+  const ps = gran==='y' ? D.years : D.quarters;
+  $('#indMeta').textContent=`${DB.meta.companies.length} công ty · `
+    +`${gran==='y'?'theo năm':'theo quý'} · ${ps[0]}–${ps[ps.length-1]}`
+    +(growth?' · tăng trưởng so với cùng kỳ năm trước':'');
+  $('#indFoot').textContent=D.note||'';
+  IND_LIST.forEach((m,i)=>{
+    const el=$('#ind'+i); if(!el) return;
+    if(!IND_INST[i]) IND_INST[i]=echarts.init(el);
+    const inst=IND_INST[i];
+    const src=(growth?D.growth:D.value)[m.id][gran==='y'?'y':'q']||{};
+    const data=ps.map(p=>src[p]==null?null:(growth?src[p]*100:src[p]));
+    const last=[...data].reverse().find(v=>v!=null);
+    const g=(D.growth[m.id][gran==='y'?'y':'q']||{})[ps[ps.length-1]];
+    $('#indsub'+i).textContent = growth
+      ? (last==null?'–':(last>=0?'+':'')+last.toFixed(1)+'%')
+      : (last==null?'–':fmtBn(last)) + (g==null?'':`  ·  ${g>=0?'+':''}${(g*100).toFixed(1)}% YoY`);
+    inst.clear(); inst.resize();
+    inst.setOption({
+      textStyle:{fontFamily:'IBM Plex Sans'},
+      tooltip:{trigger:'axis', backgroundColor:'#211C16', borderColor:'#211C16',
+        textStyle:{color:'#fff',fontFamily:'IBM Plex Mono',fontSize:11},
+        formatter:pp=>{const p=pp[0]; return `${p.axisValue}<br><b>${p.value==null?'–':(growth?(p.value>=0?'+':'')+p.value.toFixed(1)+'%':fmtBn(p.value))}</b>`;}},
+      grid:{left:56,right:14,top:14,bottom:34},
+      xAxis:{type:'category',data:ps,axisTick:{show:false},
+        axisLine:{lineStyle:{color:'#D8CFBE'}},
+        axisLabel:{fontFamily:'IBM Plex Mono',fontSize:10,interval:ps.length>14?'auto':0,rotate:ps.length>10?38:0}},
+      yAxis:{type:'value',splitLine:{lineStyle:{color:'#EFE9DD'}},
+        axisLabel:{fontFamily:'IBM Plex Mono',fontSize:10,
+          formatter:v=>growth?v+'%':fmtAxisBn(v)}},
+      series:[growth
+        ? {type:'bar',data,barMaxWidth:22,
+           itemStyle:{color:pr=>pr.value>=0?'#4F6F52':'#8C3B3B',borderRadius:[2,2,0,0]}}
+        : {type:'line',data,smooth:false,symbol:'circle',symbolSize:3.5,connectNulls:false,
+           itemStyle:{color:'#9B7B47'},lineStyle:{color:'#9B7B47',width:1.8},
+           areaStyle:{color:'rgba(155,123,71,.10)'}}]
+    },true);
+  });
+}
+
+/* ---------- TĂNG VỐN ---------- */
+const CAP_FORM={cash:'Phát hành thu tiền', premium:'Thưởng từ thặng dư vốn', profit:'Cổ tức/thưởng từ lợi nhuận'};
+const CAP_COLOR={cash:'#3C5A6E', premium:'#9B7B47', profit:'#4F6F52'};
+function renderCapital(){
+  const C=DB.capital_raise;
+  if(!C||!Object.keys(C.companies||{}).length){
+    $('#capWrap').innerHTML='<div class="loading">Không có dữ liệu tăng vốn</div>'; return; }
+  const rows=Object.entries(C.companies).sort((a,b)=>b[1].tang-a[1].tang);
+  const tong=rows.reduce((s,[,r])=>s+r.tang,0);
+  const sel=state.cos;
+  const fm=v=>v==null?'–':Math.round(v).toLocaleString('vi-VN');
+  let h=`<div class="seasonsec">Tăng vốn điều lệ ${escHtml(C.period)} — ${rows.length} công ty, tổng ${fm(tong)} tỷ</div>`
+   +`<div class="seasonwrap-scroll"><table class="seasontable"><thead><tr>`
+   +`<th>Mã</th><th>Vốn góp đầu kỳ</th><th>Vốn góp cuối kỳ</th><th>Tăng</th>`
+   +`<th>Phát hành thu tiền</th><th>Giá phát hành</th><th>Từ thặng dư vốn</th><th>Từ lợi nhuận</th><th>Hình thức</th></tr></thead><tbody>`;
+  rows.forEach(([t,r])=>{
+    const on = sel.includes(t) ? ' class="mssel"' : '';
+    const forms=r.forms.map(f=>`<span class="badge" style="border-color:${CAP_COLOR[f]};color:${CAP_COLOR[f]}">${CAP_FORM[f]}</span>`).join(' ');
+    h+=`<tr><td class="syr"${on}>${t}</td>`
+      +`<td class="hc-v">${fm(r.von_gop_dau)}</td><td class="hc-v">${fm(r.von_gop_cuoi)}</td>`
+      +`<td class="hc-v"><b>${fm(r.tang)}</b></td>`
+      +`<td class="hc-v">${r.phat_hanh_thu_tien>1?fm(r.phat_hanh_thu_tien):'–'}</td>`
+      +`<td class="hc-v">${r.gia_phat_hanh?r.gia_phat_hanh.toLocaleString('vi-VN')+' đ':'–'}</td>`
+      +`<td class="hc-v">${r.tu_thang_du>1?fm(r.tu_thang_du):'–'}</td>`
+      +`<td class="hc-v">${r.tu_loi_nhuan>1?fm(r.tu_loi_nhuan):'–'}</td>`
+      +`<td class="hc-l">${forms}${r.ro_rang?'':' <span class="badge">gộp nhiều hình thức</span>'}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  const gop=rows.filter(([,r])=>!r.ro_rang).map(([t])=>t);
+  h+=`<div class="ovfoot">${escHtml(C.note)}`
+    +(gop.length?` <b>${gop.join(', ')}</b> tăng vốn bằng nhiều hình thức cùng lúc trong một kỳ nên bảng cân đối không tách được tỷ lệ chính xác giữa các hình thức — số hiển thị là phần suy ra, cần đối chiếu nghị quyết ĐHCĐ nếu dùng cho phân tích chi tiết.`:'')
+    +`</div>`;
+  $('#capWrap').innerHTML=h;
+}
+
 function renderShare(){
   const gran=state.shareGran;
   const ms=DB.market_share||{};
   // trục kỳ của thị phần độc lập với khoảng thời gian chung (nguồn chỉ có từ 2020)
   const periods = gran==='y' ? (ms.years||[]) : (ms.quarterly_periods||[]);
   if(!periods.length){ $('#shareWrap').innerHTML='<div class="loading">Không có dữ liệu thị phần</div>'; return; }
+  if(state.shareView==='line'){
+    $('#shareWrap').classList.add('hide');
+    $('#chart').classList.remove('hide');
+    renderShareLine(periods, gran);
+    $('#ctit').textContent = (state.shareMetric==='margin_share_pct'
+      ? 'Thị phần dư nợ cho vay margin' : 'Thị phần môi giới');
+    $('#csub').textContent=`${state.cos.length||8} công ty · ${gran==='y'?'theo năm':'theo quý'} · ${periods[0]}–${periods[periods.length-1]}`;
+    $('#stats').innerHTML='';
+    const mth=(DB.market_share||{}).methodology||{};
+    $('#foot').innerHTML = escHtml(state.shareMetric==='margin_share_pct'
+      ? (mth.margin_quarterly||'')
+      : (mth.brokerage_quarterly||'') + ' ' + ((DB.market_share||{}).brokerage_source||''));
+    return;
+  }
+  $('#chart').classList.add('hide');
+  $('#shareWrap').classList.remove('hide');
   $('#shareWrap').innerHTML =
      `<div class="seasonsec">Thị phần dư nợ cho vay margin</div>`
     +`<div class="seasonwrap-scroll"><table class="seasontable">${shareTable('margin_share_pct',periods,gran)}</table></div>`
     +`<div class="seasonsec">Thị phần môi giới (giá trị giao dịch NĐT)</div>`
     +`<div class="seasonwrap-scroll"><table class="seasontable">${shareTable('brokerage_share_pct',periods,gran)}</table></div>`;
-  $('#ctit').textContent='Thị phần ngành · 13 công ty';
+  $('#ctit').textContent='Thị phần ngành · '+DB.meta.companies.length+' công ty';
   $('#csub').textContent=`${gran==='y'?'theo năm':'theo quý'} · ${periods[0]}–${periods[periods.length-1]} · mẫu số = tổng ~88 CTCK toàn ngành`;
   const meth=ms.methodology||{}, notes=ms.notes||{};
-  $('#foot').innerHTML='Nguồn: '+escHtml(ms.source||'FiinProX')+'. Mẫu số ("toàn ngành") là tổng của toàn bộ ~88 công ty chứng khoán có báo cáo trên FiinPro (HOSE+HNX+UPCoM), không chỉ 13 công ty trong dashboard. '
+  const nco = DB.meta.companies.length;
+  $('#foot').innerHTML='Nguồn: '+escHtml(ms.source||'FiinProX')+`. Mẫu số ("toàn ngành") là tổng của toàn bộ ~88 công ty chứng khoán có báo cáo trên FiinPro (HOSE+HNX+UPCoM), không chỉ ${nco} công ty trong dashboard. `
     +escHtml(meth.brokerage_yearly||'')+' '+escHtml(meth.margin_yearly||'')+' '+escHtml(notes.VCI||'')
     +' Lưu ý thêm: VND quý Q3/2020 và VCK giai đoạn 2023–2024 có giá trị cao bất thường so với các kỳ liền kề trong file nguồn FiinPro — cần đối chiếu thêm, không phải lỗi tính của bảng này.'
-    +' "Tổng 13 CT" = tổng thị phần 13 công ty trong dashboard (phần còn lại thuộc ~75 công ty khác).';
+    +` "Tổng ${nco} CT" = tổng thị phần ${nco} công ty trong dashboard (phần còn lại thuộc các CTCK khác trong ngành).`;
   $('#stats').innerHTML='';
 }
 
@@ -1231,20 +1602,32 @@ function setMode(m){
   state.mode=m;
   $$('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
   $$('.mctl').forEach(e=>e.classList.toggle('hide', !e.classList.contains('mode-'+m)));
+  // ô chọn chỉ tiêu của tab Thị phần chỉ có nghĩa ở dạng ĐƯỜNG (dạng bảng hiện
+  // cả hai bảng cùng lúc) — đặt SAU vòng lặp .mctl ở trên để không bị ghi đè
+  $('#shareMetricWrap').classList.toggle('hide', !(m==='share' && state.shareView==='line'));
   $('#ovWrap').classList.toggle('hide', m!=='ov');
-  $('#mainCard').classList.toggle('hide', m==='ov');
-  $('#stats').classList.toggle('hide', m==='ov');
-  $('#exportBtn').classList.toggle('hide', m==='ov'||m==='rank'||m==='season'||m==='share');
-  // rank / season / share dùng bảng HTML thay cho biểu đồ
-  $('#chart').classList.toggle('hide', m==='rank'||m==='season'||m==='share');
+  const ownWrap = (m==='ov'||m==='ind'||m==='cap');   // tab có khung riêng
+  $('#mainCard').classList.toggle('hide', ownWrap);
+  $('#stats').classList.toggle('hide', ownWrap);
+  $('#indWrap').classList.toggle('hide', m!=='ind');
+  $('#capWrap').classList.toggle('hide', m!=='cap');
+  // tab Thị phần có 2 dạng xem: bảng nhiệt (HTML) hoặc đường (biểu đồ)
+  const shareIsLine = (m==='share' && state.shareView==='line');
+  $('#exportBtn').classList.toggle('hide', ownWrap||m==='rank'||m==='season'||(m==='share'&&!shareIsLine));
+  // rank / season / share-bảng dùng bảng HTML thay cho biểu đồ
+  $('#chart').classList.toggle('hide', m==='rank'||m==='season'||(m==='share'&&!shareIsLine));
   $('#rankWrap').classList.toggle('hide', m!=='rank');
   $('#seasonWrap').classList.toggle('hide', m!=='season');
-  $('#shareWrap').classList.toggle('hide', m!=='share');
-  if(m!=='break') $('#tdCard').classList.add('hide');
+  $('#shareWrap').classList.toggle('hide', m!=='share'||shareIsLine);
+  if(m!=='break' && m!=='td') $('#tdCard').classList.add('hide');
   // khoảng thời gian năm/quý không áp dụng cho chuỗi định giá theo ngày,
   // chuỗi mùa vụ theo tháng và bảng thị phần (có trục kỳ riêng)
-  $('#granWrap').classList.toggle('hide', m==='val'||m==='season'||m==='share');
-  $('#rngWrap').classList.toggle('hide', m==='val'||m==='season'||m==='share');
+  const ownAxis = ['val','season','share','ind','cap'].includes(m);   // tab có trục kỳ riêng
+  $('#granWrap').classList.toggle('hide', ownAxis);
+  $('#rngWrap').classList.toggle('hide', ownAxis);
+  // Toàn ngành cộng ngang cả 34 mã nên chips chọn công ty không có tác dụng;
+  // tab Tăng vốn thì vẫn giữ để làm nổi bật dòng của mã đang chọn.
+  $('#chips').classList.toggle('hide', m==='ind');
   if(m==='break'){
     $$('#typeSeg button').forEach(b=>b.classList.toggle('hide',!['stack','area','line'].includes(b.dataset.t)));
     if(!['stack','area','line'].includes(state.type)) setType('stack');
@@ -1264,8 +1647,8 @@ function initApp(){
     +(DB.valuation&&DB.valuation.meta?` · định giá theo ngày đến ${DB.valuation.meta.date_end}`:'');
   $('#boot').classList.add('hide'); $('#app').classList.remove('hide');
   chart=echarts.init($('#chart'));
-  buildCoPanel(); buildMetricPanel(); buildBreakdownControls(); buildValControls();
-  buildRankControls(); buildSeasonControls(); buildOverview(); fillRange();
+  buildCoPanel(); buildMetricPanel(); buildBreakdownControls(); buildTdControls(); buildValControls();
+  buildRankControls(); buildSeasonControls(); buildOverview(); buildIndustry(); fillRange();
 
   // lựa chọn mặc định cho một màn hình đầu tiên có ý nghĩa
   ['SSI','TCX','VCI','HCM','VND','SHS','VIX'].forEach(c=>{
@@ -1289,6 +1672,7 @@ function initApp(){
   $$('#xSeg button').forEach(b=>b.onclick=()=>{ state.xaxis=b.dataset.x; $$('#xSeg button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $$('#granSeg button').forEach(b=>b.onclick=()=>{ state.gran=b.dataset.g; $$('#granSeg button').forEach(x=>x.classList.toggle('on',x===b)); fillRange(); render(); });
   $$('#bkView button').forEach(b=>b.onclick=()=>{ state.bkView=b.dataset.v; $$('#bkView button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#tdView button').forEach(b=>b.onclick=()=>{ state.tdView=b.dataset.tv; $$('#tdView button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $$('#rkN button').forEach(b=>b.onclick=()=>{ state.rkN=+b.dataset.n; $$('#rkN button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $$('#cmpSort button').forEach(b=>b.onclick=()=>{ state.cmpSort=b.dataset.s; $$('#cmpSort button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $$('#valView button').forEach(b=>b.onclick=()=>{ state.valView=b.dataset.vv; $$('#valView button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
@@ -1300,6 +1684,16 @@ function initApp(){
     $('#seasonCoWrap').classList.toggle('hide', state.seasonView!=='co');
     state.seasonFrom=null; state.seasonTo=null; render(); });
   $$('#shareGran button').forEach(b=>b.onclick=()=>{ state.shareGran=b.dataset.sg; $$('#shareGran button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#shareView button').forEach(b=>b.onclick=()=>{
+    state.shareView=b.dataset.sv;
+    $$('#shareView button').forEach(x=>x.classList.toggle('on',x===b));
+    // render() không chạy lại setMode nên phải tự bật/tắt ô chọn chỉ tiêu ở đây
+    $('#shareMetricWrap').classList.toggle('hide', state.shareView!=='line');
+    render();
+  });
+  $$('#indGran button').forEach(b=>b.onclick=()=>{ state.indGran=b.dataset.ig; $$('#indGran button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#indView button').forEach(b=>b.onclick=()=>{ state.indView=b.dataset.iv; $$('#indView button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $$('#shareMetric button').forEach(b=>b.onclick=()=>{ state.shareMetric=b.dataset.sm; $$('#shareMetric button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
 
   // selects
   $('#rngFrom').onchange=e=>{ state.from=+e.target.value; if(state.from>state.to){state.to=state.from;$('#rngTo').value=state.to;} render(); };
@@ -1307,6 +1701,7 @@ function initApp(){
   $('#atSel').onchange=e=>{ state.at=+e.target.value; render(); };
   $('#bkCo').onchange=e=>{ state.bkCo=e.target.value; render(); };
   $('#bkGroup').onchange=e=>{ state.bkGroup=e.target.value; render(); };
+  $('#tdCo').onchange=e=>{ state.tdCo=e.target.value; render(); };
   $('#rkMetric').onchange=e=>{ state.rkMetric=e.target.value; render(); };
   $('#valCo').onchange=e=>{ state.valCo=e.target.value; render(); };
   $('#valHi').onchange=e=>{ state.valHi=e.target.value; render(); };
